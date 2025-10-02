@@ -50,7 +50,7 @@ export class InitialDataDatabaseService implements OnModuleInit{
             await this.accessControlReady(roleRepository, RolesEnum);
             await this.linkRolesPermissions(permRepository, roleRepository);
 
-            console.log('Roles & Permissions 자동 등록 완료');
+            console.log('권한 관련 데이터 세팅 완료');
         }catch(e){
             console.error(e);
         }

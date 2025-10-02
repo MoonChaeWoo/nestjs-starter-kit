@@ -13,6 +13,8 @@ import * as bcrypt from 'bcrypt';
 import {CreateAuthDto} from "./dto/create-auth.dto";
 import {HASH_ROUNDS} from "./constants/auth.constants";
 import {AuthUserType} from "./type/auth.type";
+import {UpdateAuthDto} from "./dto/update-auth.dto";
+import {Response} from "express";
 
 @Injectable()
 export class AuthService implements OnModuleInit{
@@ -94,19 +96,34 @@ export class AuthService implements OnModuleInit{
     }
 
     /**
-     * 사용자 로그인 처리
+     * 사용자 인증 및 토큰 발급
      *
-     * 전달받은 이메일 또는 ID와 비밀번호로 인증 수행
-     * 인증 성공 시 accessToken과 refreshToken을 발급하여 반환
-     * 오류 발생 시 로거에 기록 후 예외를 그대로 던짐
+     * - AuthService에서 호출
+     * - 유효한 사용자 확인 후 JWT 토큰 발급
+     * - accessToken, refreshToken 쿠키 설정
      *
-     * @param user 로그인 시 전달된 사용자 정보 (email, id, password)
-     * @returns accessToken, refreshToken 포함 토큰 세트
+     * @param res Response 객체 (쿠키 설정용)
+     * @param user 인증 정보 (email 또는 id, password)
+     * @returns { email, id, nickname } 인증된 사용자 정보
+     * @throws 인증 실패 시 UnauthorizedException 또는 기타 예외 발생
      */
-    async loginUser(user: AuthUserType){
+    async loginUser(res: Response, user: AuthUserType): Promise<Pick<UsersEntity, 'email' | 'id' | 'nickname'>>{
         try{
             const targetUser = await this.userAuthenticate(user);
-            return this.signToken(targetUser);
+            const {accessToken, refreshToken} = this.signToken(targetUser);
+
+            res.cookie('accessToken', accessToken, {
+               httpOnly: true,
+            });
+            res.cookie('refreshToken', refreshToken, {
+                httpOnly: true,
+            });
+
+            return {
+                email: targetUser.email,
+                id: targetUser.id,
+                nickname: targetUser.nickname,
+            };
         }catch(error){
             this.logger.error('로그인 실패 : ', error);
             throw error;
@@ -139,6 +156,32 @@ export class AuthService implements OnModuleInit{
     }
 
     /**
+     * 회원 정보 업데이트
+     *
+     * - 비밀번호가 포함된 경우 bcrypt로 해싱 후 저장
+     * - UsersService.updateUser 호출
+     *
+     * @param uid 수정할 회원 UID
+     * @param user 수정할 회원 정보 (UpdateAuthDto)
+     * @returns { message: string, success: boolean }
+     * @throws DB 저장 실패 시 예외 발생
+     */
+    async updateUser(uid: number, user : UpdateAuthDto):Promise<{message : string, success : boolean}>{
+        try {
+            const passwordHash = await bcrypt.hash(
+                user.password,
+                HASH_ROUNDS
+            );
+            await this.usersService.updateUser(uid, {...user, password : passwordHash});
+
+            return {message : "회원수정에 성공하였습니다.", success : true};
+        }catch (error) {
+            this.logger.error('회원정보 수정 실패 : ', error);
+            throw error;
+        }
+    }
+
+    /**
      * 유저 인증 처리
      *
      * email 또는 id 중 하나로 회원 조회 후, 비밀번호 확인
@@ -157,7 +200,7 @@ export class AuthService implements OnModuleInit{
             const targetUser: {} | UsersEntity = await this.usersService.findUser(user);
             if(!('uid' in targetUser)) throw new UnauthorizedException('존재하지 않는 회원입니다.');
 
-            const authResult: boolean = bcrypt.compare(user.password, targetUser.password);
+            const authResult: boolean = await bcrypt.compare(user.password, targetUser.password);
             if(!authResult) throw new UnauthorizedException('회원 정보가 일치하지 않습니다.');
 
             return targetUser;

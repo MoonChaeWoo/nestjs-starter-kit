@@ -1,15 +1,15 @@
-import { Controller, Post, Body } from '@nestjs/common';
+import {Controller, Post, Body, Patch, Param, Res, Req, Get} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import type {MailResponseType, SendMailType} from "../mail/types/mail-types.type";
 import {CreateAuthDto} from "./dto/create-auth.dto";
 import type {AuthUserType} from "./type/auth.type";
-import {TokenType} from "./interface/auth.interface";
+import {UpdateAuthDto} from "./dto/update-auth.dto";
+import type {Response, Request} from "express";
+import {UsersEntity} from "../users/entities/users.entity";
 
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService) {
-    }
-
+    constructor(private readonly authService: AuthService) {}
     /**
      * 인증 번호 메일 전송
      *
@@ -40,23 +40,38 @@ export class AuthController {
      * 로그인
      *
      * - POST /auth/login
-     * - 이메일 또는 아이디와 비밀번호로 인증
-     * - 인증 성공 시 액세스/리프레시 토큰 발급
+     * - 이메일 또는 아이디와 비밀번호로 사용자 인증
+     * - 인증 성공 시 accessToken, refreshToken을 HttpOnly 쿠키로 발급
+     * - 사용자 이메일, 아이디, 닉네임 반환
      *
+     * @param res Response 객체 (쿠키 설정용)
      * @param user 로그인 정보 (email 또는 id, password)
-     * @returns TokenType { accessToken, refreshToken }
+     * @returns { email, id, nickname } 인증된 사용자 정보
+     *
      * @example
      * POST http://localhost:3000/auth/login
-     * Body: {
+     * Body:
+     * {
      *   "email": "user@example.com",
      *   "password": "password123"
      * }
+     *
+     * Response:
+     * {
+     *   "email": "user@example.com",
+     *   "id": "user01",
+     *   "nickname": "유저닉네임"
+     * }
+     *
+     * - 성공 시 accessToken, refreshToken이 HttpOnly 쿠키에 설정됨
+     * - 실패 시 예외 발생
      */
     @Post('login')
     loginUser(
+        @Res({ passthrough: true }) res: Response,
         @Body() user: AuthUserType
-    ): Promise<TokenType>{
-        return this.authService.loginUser(user);
+    ): Promise<Pick<UsersEntity, 'email' | 'id' | 'nickname'>>{
+        return this.authService.loginUser(res, user);
     }
 
     /**
@@ -84,6 +99,39 @@ export class AuthController {
     }
 
     /**
+     * 회원 정보 수정
+     *
+     * - PATCH /auth/update/:uid
+     * - 회원의 정보를 수정 (비밀번호 포함 시 해시 처리됨)
+     * - 수정 성공 시 성공 메시지와 success 여부 반환
+     *
+     * @param uid 수정할 회원 UID
+     * @param user 수정할 회원 정보 (UpdateAuthDto)
+     * @returns { message: string, success: boolean }
+     *
+     * @example
+     * PATCH http://localhost:3000/auth/update/1
+     * Body: {
+     *   "email": "updated@example.com",
+     *   "nickname": "newNick",
+     *   "password": "newPassword123"
+     * }
+     *
+     * Response: {
+     *   "message": "회원수정에 성공하였습니다.",
+     *   "success": true
+     * }
+     */
+    @Patch()
+    @Post('update')
+    updateUser(
+        @Param('uid') uid: number,
+        @Body()user: UpdateAuthDto
+    ){
+        return this.authService.updateUser(uid, user);
+    }
+
+    /**
      * 사용자 인증
      *
      * - POST /auth/authenticate
@@ -105,4 +153,15 @@ export class AuthController {
         return this.authService.userAuthenticate(user);
     }
 
+    // test
+    // @Get('check-cookie')
+    // checkCookie(@Req() req: Request) {
+    //     // 브라우저가 보내준 쿠키
+    //     console.log(req.headers.cookie);
+    //     // 또는 개별 쿠키
+    //     console.log(req.cookies.accessToken);
+    //     console.log(req.cookies.refreshToken);
+    //
+    //     return { cookies: req.cookies };
+    // }
 }
