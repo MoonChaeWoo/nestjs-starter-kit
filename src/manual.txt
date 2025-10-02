@@ -1,0 +1,32 @@
+프로젝트 구조 예시
+src
+├─ common        : 공용 모듈 (유틸, 데코레이터, 필터, 인터셉터, 가드)
+├─ config        : 설정 관련 (env, DB, cache, swagger, logger)
+├─ modules       : 도메인별 모듈 (auth, users, posts, comments)
+├─ main.ts       : 앱 진입점
+└─ app.module.ts : 루트 모듈
+
+Nest CLI 명령어 (modules 안에 생성)
+
+빌드 후 실행
+nest build && nest start
+
+개발 모드
+nest start:dev
+
+모듈, 컨트롤러, 서비스 한번에 생성
+nest g resource modules/auth
+
+모듈 생성
+nest g module modules/auth
+
+컨트롤러 생성
+nest g controller modules/auth
+
+서비스 생성
+nest g service modules/auth
+
+DTO, Entity, Repository 생성 예시
+nest g class modules/auth/dto/create-user.dto --no-spec
+nest g class modules/auth/entities/user.entity --no-spec
+nest g class modules/auth/repository/user.repository --no-spec

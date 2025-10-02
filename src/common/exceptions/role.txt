@@ -1,0 +1,3 @@
+exceptions
+- 예외 필터를 정의하는 폴더 (HTTP 예외 처리 등)
+- 예시 파일: http-exception.filter.ts, all-exceptions.filter.ts

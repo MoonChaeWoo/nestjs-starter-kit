@@ -1,0 +1,3 @@
+decorators
+- 커스텀 데코레이터를 정의하는 폴더 (예: 요청 사용자 정보 추출)
+- 예시 파일: user.decorator.ts, roles.decorator.ts

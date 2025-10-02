@@ -1,0 +1,3 @@
+interceptors
+- 로깅, 캐싱, 트랜잭션 등 인터셉터를 정의하는 폴더
+- 예시 파일: logging.interceptor.ts, cache.interceptor.ts, transform.interceptor.ts
