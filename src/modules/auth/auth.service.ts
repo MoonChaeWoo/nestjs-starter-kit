@@ -72,7 +72,7 @@ export class AuthService implements OnModuleInit{
             token : isRefreshToken,
         };
 
-        return this.jwtService.sign(payload, {
+        return 'Bearer ' + this.jwtService.sign(payload, {
             secret: this.configService.get('JWT_SECRET_KEY'),
             expiresIn: isRefreshToken ? '1d' : '15m',
             algorithm: 'HS512'
@@ -115,7 +115,7 @@ export class AuthService implements OnModuleInit{
             res.cookie('accessToken', accessToken, {
                httpOnly: true,
             });
-            res.cookie('refreshToken', refreshToken, {
+            res.cookie('refreshToken', '' + refreshToken, {
                 httpOnly: true,
             });
 
@@ -297,15 +297,32 @@ export class AuthService implements OnModuleInit{
             });
         }catch(error){
             this.logger.error('토큰 만료 또는 검증 오류 : ', error);
-            throw new UnauthorizedException(error);
+            throw error;
         }
     }
 
-    // 토큰 재 발금
+    /**
+     * 토큰 재발급
+     *
+     * - access, refresh, all 중 하나를 선택하여 재발급
+     * - refreshToken 검증 후 유효하면 새로운 토큰 발급
+     * - HTTP Only 쿠키로 브라우저에 저장
+     *
+     * @param res Response 객체 (NestJS Response)
+     * @param type 'access' | 'refresh' | 'all' 재발급할 토큰 유형
+     * @param tokens 기존 accessToken과 refreshToken
+     * @throws BadRequestException: 토큰 미존재 또는 type 오류
+     * @throws UnauthorizedException: 토큰 만료 또는 검증 실패
+     *
+     * @example
+     * // 모든 토큰 재발급
+     * GET /auth/token/reissue/all
+     * 쿠키: accessToken, refreshToken 새로 발급
+     */
     async reissueToken(res: Response, type : 'access' | 'refresh'| 'all', tokens: TokenType) {
         try{
             if(!(tokens.accessToken || tokens.refreshToken)) throw new BadRequestException('검증할 토큰이 존재하지 않습니다.');
-            tokens.refreshToken = tokens.refreshToken.replace(/^bearer /i, '');
+            tokens.refreshToken = tokens.refreshToken.replace(/^(base |bearer )/i, '');
 
             const refreshCheckResult = await checkExpiredToken(tokens.refreshToken);
             if(refreshCheckResult.pass){
@@ -330,10 +347,12 @@ export class AuthService implements OnModuleInit{
                 }else{
                     throw new BadRequestException('재발급할 토큰의 유형을 지정해 주세요.')
                 }
+            }else{
+                throw new UnauthorizedException('로그인을 다시 진행해 주세요.');
             }
         }catch(error){
             this.logger.error('모든 토큰 만료 또는 검증 오류 : ', error);
-            throw new UnauthorizedException(error);
+            throw error;
         }
     }
 }
