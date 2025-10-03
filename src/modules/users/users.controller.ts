@@ -59,7 +59,7 @@ export class UsersController {
      * PATCH http://localhost:3000/users/1
      * Body: { "nickname": "newNickname" }
      */
-    @Patch(':id')
+    @Patch(':uid')
     updateUser(
         @Param('uid') uid: number,
         @Body() user : UpdateUserDto

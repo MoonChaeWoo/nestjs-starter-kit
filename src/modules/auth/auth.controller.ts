@@ -10,32 +10,7 @@ import {UsersEntity} from "../users/entities/users.entity";
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
-    /**
-     * 인증 번호 메일 전송
-     *
-     * - POST /auth/mail
-     * - body로 SendMailType 객체 받음
-     * - AuthService.sendAuthEmail 호출 후 결과 반환
-     *
-     * @param sendMailDto 전송할 메일 정보
-     * @returns MailResponseType (accepted, rejected, messageId)
-     * @example
-     * POST http://localhost:3000/auth/mail
-     * Body: {
-     *   "from": "no-reply@example.com",
-     *   "to": "user@example.com",
-     *   "subject": "인증번호 발송",
-     *   "template": "auth",
-     *   "context": { "name": "사용자" }
-     * }
-     */
-    @Post('mail')
-    sendAuthEmail(
-        @Body() sendMailDto: SendMailType
-    ): Promise<MailResponseType> {
-        return this.authService.sendAuthEmail(sendMailDto);
-    }
-
+    /** ===================== 인증 ===================== */
     /**
      * 로그인
      *
@@ -74,6 +49,55 @@ export class AuthController {
         return this.authService.loginUser(res, user);
     }
 
+    /**
+     * 메일 인증 번호 전송
+     *
+     * - POST /auth/mail
+     * - body로 SendMailType 객체 받음
+     * - AuthService.sendAuthEmail 호출 후 결과 반환
+     *
+     * @param sendMailDto 전송할 메일 정보
+     * @returns MailResponseType (accepted, rejected, messageId)
+     * @example
+     * POST http://localhost:3000/auth/mail
+     * Body: {
+     *   "from": "no-reply@example.com",
+     *   "to": "user@example.com",
+     *   "subject": "인증번호 발송",
+     *   "template": "auth",
+     *   "context": { "name": "사용자" }
+     * }
+     */
+    @Post('mail')
+    sendAuthEmail(
+        @Body() sendMailDto: SendMailType
+    ): Promise<MailResponseType> {
+        return this.authService.sendAuthEmail(sendMailDto);
+    }
+
+    /**
+     * 사용자 인증
+     *
+     * - POST /auth/authenticate
+     * - 이메일 또는 아이디와 비밀번호 확인
+     *
+     * @param user 인증 정보 (email 또는 id, password)
+     * @returns 회원 정보
+     * @example
+     * POST http://localhost:3000/auth/authenticate
+     * Body: {
+     *   "email": "user@example.com",
+     *   "password": "password123"
+     * }
+     */
+    @Post('authenticate')
+    userAuthenticate(
+        @Body()user: AuthUserType
+    ){
+        return this.authService.userAuthenticate(user);
+    }
+
+    /** ===================== 회원 가입, 수정, 탈퇴 ===================== */
     /**
      * 회원가입
      *
@@ -122,8 +146,7 @@ export class AuthController {
      *   "success": true
      * }
      */
-    @Patch()
-    @Post('update')
+    @Patch('update/:uid')
     updateUser(
         @Param('uid') uid: number,
         @Body()user: UpdateAuthDto
@@ -132,25 +155,108 @@ export class AuthController {
     }
 
     /**
-     * 사용자 인증
+     * 회원 탈퇴 (소프트 삭제)
      *
-     * - POST /auth/authenticate
-     * - 이메일 또는 아이디와 비밀번호 확인
+     * - GET /auth/delete/:uid
+     * - path parameter로 회원 UID 전달
+     * - AuthService의 deleteUser 호출
      *
-     * @param user 인증 정보 (email 또는 id, password)
-     * @returns 회원 정보
+     * @param uid 삭제할 회원의 UID
+     * @returns 회원 탈퇴 성공 메시지와 성공 여부
+     *
      * @example
-     * POST http://localhost:3000/auth/authenticate
-     * Body: {
-     *   "email": "user@example.com",
-     *   "password": "password123"
+     * GET /auth/delete/1
+     * Response: { "message": "회원탈퇴를 완료하였습니다.", "success": true }
+     */
+    @Get('delete/:uid')
+    deleteUser(
+        @Param('uid') uid: number,
+    ){
+        return this.authService.deleteUser(uid);
+    }
+
+    /**
+     * 액세스 토큰 유효성 검증 API
+     *
+     * - 요청 쿠키(`accessToken`)에 담긴 JWT를 검증한다.
+     * - 유효한 경우: 토큰 payload(디코딩된 객체)를 반환한다.
+     * - 유효하지 않거나 만료된 경우: 401 Unauthorized 예외를 발생시킨다.
+     *
+     * @route GET /auth/verify
+     * @returns {object} JWT payload (정상일 경우)
+     *
+     * 성공 응답 예시:
+     * {
+     *   "sub": 1,
+     *   "email": "test@example.com",
+     *   "iat": 1735900000,
+     *   "exp": 1735903600
+     * }
+     *
+     * 실패 응답 예시:
+     * {
+     *   "statusCode": 401,
+     *   "message": "Unauthorized",
+     *   "error": {
+     *     "name": "TokenExpiredError",
+     *     "message": "jwt expired",
+     *     "expiredAt": "2025-10-03T08:34:52.000Z"
+     *   }
      * }
      */
-    @Post('authenticate')
-    userAuthenticate(
-        @Body()user: AuthUserType
+    @Get('token/verify')
+    verifyToken(
+        @Req() req: Request
     ){
-        return this.authService.userAuthenticate(user);
+        return this.authService.verifyToken(req.cookies.accessToken);
+    }
+
+    /**
+     * JWT 토큰 재발급 API
+     *
+     * - 쿠키에 있는 accessToken, refreshToken을 기반으로 토큰 재발급
+     * - type에 따라 재발급할 토큰 지정 가능
+     *   - 'access' : accessToken만 재발급
+     *   - 'refresh' : refreshToken만 재발급
+     *   - 'all' : accessToken과 refreshToken 모두 재발급
+     * - refreshToken이 만료되었거나 검증 실패 시 UnauthorizedException 발생
+     *
+     * @route GET /auth/token/reissue/:type
+     * @param res
+     * @param req
+     * @param type 재발급할 토큰 유형 ('access' | 'refresh' | 'all')
+     * @returns 쿠키로 재발급된 토큰 세팅
+     *
+     * 요청 예시:
+     * GET /auth/token/reissue/all
+     * 쿠키: accessToken=xxx; refreshToken=yyy;
+     *
+     * 성공 시 응답: (쿠키에 새 토큰 세팅됨)
+     * {
+     *   "message": "Tokens reissued successfully"
+     * }
+     *
+     * 실패 예시 (refreshToken 만료):
+     * {
+     *   "statusCode": 401,
+     *   "message": "Unauthorized",
+     *   "error": {
+     *     "name": "TokenExpiredError",
+     *     "message": "jwt expired",
+     *     "expiredAt": "2025-10-03T09:00:00.000Z"
+     *   }
+     * }
+     */
+    @Get('token/reissue/:type')
+    reissueToken(
+        @Res({ passthrough: true }) res: Response,
+        @Req() req: Request,
+        @Param('type') type : 'access' | 'refresh' | 'all',
+    ){
+        return this.authService.reissueToken(res, type, {
+            accessToken: req.cookies.accessToken,
+            refreshToken: req.cookies.refreshToken
+        });
     }
 
     // test
@@ -165,3 +271,4 @@ export class AuthController {
     //     return { cookies: req.cookies };
     // }
 }
+//

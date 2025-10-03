@@ -1,5 +1,6 @@
 import {AuthEmailContext, VerificationData} from "../interface/auth.interface";
 import {randomInt} from "crypto";
+import {JwtService} from "@nestjs/jwt";
 
 /**
  * 인증 코드 context 생성함
@@ -54,3 +55,19 @@ export const checkExpiresAt = (verificationMap : Map<string, VerificationData>, 
         }
     })
 };
+
+export const checkExpiredToken = async(token: string): Promise<{payload, pass : boolean}> => {
+    try {
+        const jwtService = new JwtService();
+        const payload = await jwtService.verify(token, { secret: process.env.JWT_SECRET_KEY});
+        return {
+            payload,
+            pass : true
+        };
+    } catch (error) {
+        return {
+            payload : error,
+            pass : false
+        };
+    }
+}

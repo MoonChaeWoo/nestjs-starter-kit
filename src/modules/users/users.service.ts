@@ -120,6 +120,9 @@ export class UsersService {
      */
     async softDeleteUser(uid: number):Promise<UpdateResult>{
         try{
+            const user = await this.usersRepository.findOneBy({ uid });
+            if (!user) throw new NotFoundException("존재하지 않는 회원의 정보를 삭제할 수 없습니다.");
+
             return await this.usersRepository.softDelete({uid});
         }catch (error){
             this.logger.error(error);
@@ -135,6 +138,9 @@ export class UsersService {
      */
     async hardDeleteUser(uid: number): Promise<DeleteResult>{
         try{
+            const user = await this.usersRepository.findOneBy({ uid });
+            if (!user) throw new NotFoundException("존재하지 않는 회원의 정보를 삭제할 수 없습니다.");
+
             return await this.usersRepository.delete({uid});
         }catch (error){
             this.logger.error(error);

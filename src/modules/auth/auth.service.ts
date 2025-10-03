@@ -1,8 +1,8 @@
-import {Injectable, Logger, OnModuleInit, UnauthorizedException} from '@nestjs/common';
+import {BadRequestException, Injectable, Logger, OnModuleInit, UnauthorizedException} from '@nestjs/common';
 import {MailerService} from "@nestjs-modules/mailer";
 import {MailResponseType, SendMailType} from "../mail/types/mail-types.type";
 import {AuthEmailContext, TokenType, VerificationData} from "./interface/auth.interface";
-import {checkExpiresAt, createContext} from "./utils/auth.utils";
+import {checkExpiredToken, checkExpiresAt, createContext} from "./utils/auth.utils";
 import {CronExpression, SchedulerRegistry} from "@nestjs/schedule";
 import {ConfigService} from "@nestjs/config";
 import {CronJob} from "cron";
@@ -148,7 +148,7 @@ export class AuthService implements OnModuleInit{
             );
             await this.usersService.registerUser({...user, password : passwordHash});
 
-            return {message : "회원가입에 성공하였습니다.", success : true};
+            return {message : "회원가입을 완료하였습니다.", success : true};
         }catch(error){
             this.logger.error('회원가입 실패 : ', error);
             throw error;
@@ -174,7 +174,7 @@ export class AuthService implements OnModuleInit{
             );
             await this.usersService.updateUser(uid, {...user, password : passwordHash});
 
-            return {message : "회원수정에 성공하였습니다.", success : true};
+            return {message : "회원수정을 완료하였습니다.", success : true};
         }catch (error) {
             this.logger.error('회원정보 수정 실패 : ', error);
             throw error;
@@ -195,7 +195,7 @@ export class AuthService implements OnModuleInit{
      */
     async userAuthenticate(user: AuthUserType): Promise<UsersEntity> {
         try{
-            if(!(user.email || user.id)) throw new Error('email 또는 id 둘중 하나는 필수 입력');
+            if(!(user.email || user.id)) throw new Error('Email 또는 Id 둘중 하나는 필수 입력입니다.');
 
             const targetUser: {} | UsersEntity = await this.usersService.findUser(user);
             if(!('uid' in targetUser)) throw new UnauthorizedException('존재하지 않는 회원입니다.');
@@ -233,9 +233,107 @@ export class AuthService implements OnModuleInit{
                 rejected: result.rejected,
                 messageId: result.messageId,
             };
-        }catch(error: any) {
+        }catch(error) {
             console.error('메일 발송 실패:', error);
             throw error;
+        }
+    }
+
+    /**
+     * 회원 탈퇴 처리 (소프트 삭제)
+     *
+     * - UsersService.softDeleteUser 호출
+     * - 해당 uid 회원을 소프트 삭제 처리 (DB에서 완전 삭제하지 않고 삭제 플래그만 설정)
+     *
+     * @param uid 삭제할 회원의 UID
+     * @returns 성공 메시지와 성공 여부 객체
+     * @throws DB 삭제 오류 발생 시 예외 발생
+     *
+     * @example
+     * deleteUser(1)
+     * return { message: "회원탈퇴를 완료하였습니다.", success: true }
+     */
+    async deleteUser(uid: number) {
+        try {
+            await this.usersService.softDeleteUser(uid);
+            return {message : "회원탈퇴를 완료하였습니다.", success : true};
+        }catch (error) {
+            console.error('회원 탈퇴 오류:', error);
+            throw error;
+        }
+    }
+
+    /**
+     * JWT 토큰 검증
+     *
+     * - 전달받은 토큰이 유효한지 확인
+     * - "Bearer " 또는 "Base " prefix 제거 후 검증 진행
+     * - 유효하면 토큰 payload 객체 반환
+     * - 토큰이 없거나 만료/위조 시 예외 발생
+     *
+     * @param token 검증할 JWT 토큰 문자열
+     * @returns 토큰 payload 객체 (예: { email, id, iat, exp })
+     * @throws BadRequestException 토큰이 전달되지 않은 경우
+     * @throws UnauthorizedException 토큰 만료 또는 위조 시
+     *
+     * @example
+     * verifyToken("Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...")
+     * // -> { email: "test@test.com", id: "user123", iat: 1696320000, exp: 1696323600 }
+     *
+     * // 토큰 만료 시 반환 예시
+     * {
+     *   "name": "TokenExpiredError",
+     *   "message": "jwt expired",
+     *   "expiredAt": "2025-10-03T08:34:52.000Z"
+     * }
+     */
+    verifyToken(token : string){
+        try{
+            if(!token) throw new BadRequestException('검증할 토큰이 존재하지 않습니다.');
+            token = token.replace(/^(base |bearer )/i, '');
+
+            return this.jwtService.verify(token, {
+                secret : this.configService.get('JWT_SECRET_KEY')
+            });
+        }catch(error){
+            this.logger.error('토큰 만료 또는 검증 오류 : ', error);
+            throw new UnauthorizedException(error);
+        }
+    }
+
+    // 토큰 재 발금
+    async reissueToken(res: Response, type : 'access' | 'refresh'| 'all', tokens: TokenType) {
+        try{
+            if(!(tokens.accessToken || tokens.refreshToken)) throw new BadRequestException('검증할 토큰이 존재하지 않습니다.');
+            tokens.refreshToken = tokens.refreshToken.replace(/^bearer /i, '');
+
+            const refreshCheckResult = await checkExpiredToken(tokens.refreshToken);
+            if(refreshCheckResult.pass){
+                const accessToken = this.generateToken(refreshCheckResult.payload, false);
+                const refreshToken = this.generateToken(refreshCheckResult.payload, true);
+
+                if(type === 'access'){
+                    res.cookie('accessToken', accessToken, {
+                        httpOnly: true,
+                    });
+                }else if(type === 'refresh'){
+                    res.cookie('refreshToken', refreshToken, {
+                        httpOnly: true,
+                    });
+                }else if(type === 'all'){
+                    res.cookie('accessToken', accessToken, {
+                        httpOnly: true,
+                    });
+                    res.cookie('refreshToken', refreshToken, {
+                        httpOnly: true,
+                    });
+                }else{
+                    throw new BadRequestException('재발급할 토큰의 유형을 지정해 주세요.')
+                }
+            }
+        }catch(error){
+            this.logger.error('모든 토큰 만료 또는 검증 오류 : ', error);
+            throw new UnauthorizedException(error);
         }
     }
 }
