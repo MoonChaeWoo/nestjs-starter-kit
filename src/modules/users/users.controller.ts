@@ -1,4 +1,4 @@
-import {Body, Controller, Delete, Get, Param, Patch, Post, Query} from '@nestjs/common';
+import {Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query} from '@nestjs/common';
 import { UsersService } from './users.service';
 import {UpdateUserDto} from "./dto/update-user.dto";
 import {CreateUserDto} from "./dto/create-user.dto";
@@ -61,10 +61,10 @@ export class UsersController {
      */
     @Patch(':uid')
     updateUser(
-        @Param('uid') uid: number,
+        @Param('uid', ParseIntPipe) uid: number,
         @Body() user : UpdateUserDto
     ): Promise<UsersEntity> {
-        return this.usersService.updateUser(+uid, user);
+        return this.usersService.updateUser(uid, user);
     }
 
     /**
@@ -76,9 +76,9 @@ export class UsersController {
      */
     @Delete('softDelete/:uid')
     softDelete(
-        @Param('uid') uid: number
+        @Param('uid', ParseIntPipe) uid: number
     ): Promise<UpdateResult> {
-        return this.usersService.softDeleteUser(+uid);
+        return this.usersService.softDeleteUser(uid);
     }
 
     /**
@@ -90,8 +90,8 @@ export class UsersController {
      */
     @Delete('hardDelete/:uid')
     hardDelete(
-        @Param('uid') uid: number
+        @Param('uid', ParseIntPipe) uid: number
     ): Promise<DeleteResult> {
-        return this.usersService.hardDeleteUser(+uid);
+        return this.usersService.hardDeleteUser(uid);
     }
 }

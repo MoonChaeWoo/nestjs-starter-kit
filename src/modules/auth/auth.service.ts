@@ -15,6 +15,9 @@ import {HASH_ROUNDS} from "./constants/auth.constants";
 import {AuthUserType} from "./type/auth.type";
 import {UpdateAuthDto} from "./dto/update-auth.dto";
 import {Response} from "express";
+import {RoleService} from "../role/role.service";
+import RolesEnum from "../../common/constants/roles.const";
+import {In, Not} from "typeorm";
 
 @Injectable()
 export class AuthService implements OnModuleInit{
@@ -24,6 +27,7 @@ export class AuthService implements OnModuleInit{
     constructor(
         private readonly jwtService: JwtService,
         private readonly usersService: UsersService,
+        private readonly roleService : RoleService,
         private readonly mailerService: MailerService,
         private readonly configService: ConfigService,
         private readonly schedulerRegistry: SchedulerRegistry
@@ -146,7 +150,8 @@ export class AuthService implements OnModuleInit{
                 user.password,
                 HASH_ROUNDS
             );
-            await this.usersService.registerUser({...user, password : passwordHash});
+            const roles = await this.roleService.grantRolesToUser(user.role);
+            await this.usersService.registerUser({...user, password : passwordHash, roles});
 
             return {message : "회원가입을 완료하였습니다.", success : true};
         }catch(error){
@@ -172,7 +177,12 @@ export class AuthService implements OnModuleInit{
                 user.password,
                 HASH_ROUNDS
             );
-            await this.usersService.updateUser(uid, {...user, password : passwordHash});
+            let roles;
+            if(user.role){
+                roles = await this.roleService.grantRolesToUser(user.role);
+            }
+
+            await this.usersService.updateUser(uid, {...user, password : passwordHash, roles});
 
             return {message : "회원수정을 완료하였습니다.", success : true};
         }catch (error) {
@@ -347,6 +357,7 @@ export class AuthService implements OnModuleInit{
                 }else{
                     throw new BadRequestException('재발급할 토큰의 유형을 지정해 주세요.')
                 }
+                return {message : "토큰 재발급이 완료하였습니다.", success : true};
             }else{
                 throw new UnauthorizedException('로그인을 다시 진행해 주세요.');
             }

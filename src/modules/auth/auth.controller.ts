@@ -1,4 +1,4 @@
-import {Controller, Post, Body, Patch, Param, Res, Req, Get} from '@nestjs/common';
+import {Controller, Post, Body, Patch, Param, Res, Req, Get, ParseIntPipe} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import type {MailResponseType, SendMailType} from "../mail/types/mail-types.type";
 import {CreateAuthDto} from "./dto/create-auth.dto";
@@ -148,7 +148,7 @@ export class AuthController {
      */
     @Patch('update/:uid')
     updateUser(
-        @Param('uid') uid: number,
+        @Param('uid', ParseIntPipe) uid: number,
         @Body()user: UpdateAuthDto
     ){
         return this.authService.updateUser(uid, user);
@@ -170,7 +170,7 @@ export class AuthController {
      */
     @Get('delete/:uid')
     deleteUser(
-        @Param('uid') uid: number,
+        @Param('uid', ParseIntPipe) uid: number,
     ){
         return this.authService.deleteUser(uid);
     }
