@@ -18,14 +18,14 @@ async function bootstrap() {
     // app.useLogger(Logger);
 
     // public 폴더를 정적 경로로 노출
-    app.useStaticAssets(path.join(__dirname, '..', 'public'));
+    app.useStaticAssets(path.join(__dirname, '..', 'server-side-render/public'));
 
     // ejs 레이아웃 미들웨어 설정
     app.use(expressLayouts);
-    app.set('layout', 'main/layouts/layout-full');
+    app.set('layout', 'base/layouts/layout-full');
 
     // ejs 템플릿 폴더 지정
-    app.setBaseViewsDir(path.join(__dirname, '..', 'views'));
+    app.setBaseViewsDir(path.join(__dirname, '..', 'server-side-render/views'));
     app.setViewEngine('ejs');
 
     // 파이프 전역 설정
