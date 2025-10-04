@@ -52,6 +52,9 @@ async function bootstrap() {
     // cookie-parser 미들웨어 등록
     app.use(cookieParser());
 
-    await app.listen(process.env.PORT ?? 3000);
+    const PORT = process.env.PORT ?? 3000;
+    await app.listen(PORT, () => {
+        console.log(`NestJs Server Start Port : http://localhost:${PORT}`);
+    });
 }
 bootstrap();

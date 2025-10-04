@@ -60,6 +60,20 @@ export class AuthController {
         return this.authService.loginUser(res, user);
     }
 
+    /**
+     * 로그아웃
+     *
+     * - GET /auth/logout
+     * - 사용자의 accessToken과 refreshToken 쿠키를 제거
+     * - AuthService.logoutUser 호출
+     *
+     * @param res Response 객체 (passthrough: true로 반환값도 Nest가 처리)
+     * @returns 로그아웃 완료 메시지와 성공 여부
+     *
+     * @example
+     * GET /auth/logout
+     * Response: { "message": "로그아웃이 완료되었습니다.", "success": true }
+     */
     @Get('logout')
     @ApiOperation({
         summary: '로그아웃',
