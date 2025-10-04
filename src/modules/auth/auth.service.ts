@@ -117,7 +117,7 @@ export class AuthService implements OnModuleInit{
             res.cookie('accessToken', accessToken, {
                httpOnly: true,
             });
-            res.cookie('refreshToken', '' + refreshToken, {
+            res.cookie('refreshToken', refreshToken, {
                 httpOnly: true,
             });
 
@@ -128,6 +128,46 @@ export class AuthService implements OnModuleInit{
             };
         }catch(error){
             this.logger.error('로그인 실패 : ', error);
+            throw error;
+        }
+    }
+
+    /**
+     * 로그아웃
+     *
+     * - GET /auth/logout
+     * - 클라이언트에 저장된 accessToken, refreshToken 쿠키를 삭제(만료 처리)
+     * - HttpOnly 옵션으로 설정된 쿠키이므로 클라이언트 JS에서는 접근 불가
+     * - 로그아웃 완료 메시지 반환
+     *
+     * @param res 응답 객체 (HttpOnly 쿠키 제거에 사용)
+     * @returns 로그아웃 성공 메시지와 성공 여부
+     *
+     * @example
+     * GET /auth/logout
+     * Response:
+     * {
+     *   "message": "로그아웃이 완료되었습니다.",
+     *   "success": true
+     * }
+     */
+
+    logoutUser(res: Response) {
+        try{
+            res.clearCookie('accessToken', {
+                httpOnly: true,
+            });
+
+            res.clearCookie('refreshToken', {
+                httpOnly: true,
+            });
+
+            return {
+                message : '로그아웃이 완료되었습니다.',
+                success : true
+            };
+        }catch (error) {
+            this.logger.error('로그아웃 오류 발생 : ', error);
             throw error;
         }
     }

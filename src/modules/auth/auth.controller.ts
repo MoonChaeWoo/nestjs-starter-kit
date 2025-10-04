@@ -60,6 +60,18 @@ export class AuthController {
         return this.authService.loginUser(res, user);
     }
 
+    @Get('logout')
+    @ApiOperation({
+        summary: '로그아웃',
+        description: '사용자의 accessToken과 refreshToken 쿠키를 제거하여 토큰을 삭제합니다.',
+    })
+    @ApiResponse({ status: 200, description: '로그아웃 성공, 쿠키 삭제 완료' })
+    logoutUser(
+        @Res({ passthrough: true }) res: Response
+    ){
+        return this.authService.logoutUser(res);
+    }
+
     /**
      * 메일 인증 번호 전송
      *
