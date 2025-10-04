@@ -48,6 +48,9 @@ export class UsersEntity extends BaseEntity{
     })
     userType: UserRoleEnum;
 
+    @Column({ default: true })
+    isActive?: boolean;
+
     @VersionColumn()
     version: number;
 

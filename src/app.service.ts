@@ -77,6 +77,7 @@ export class AppService {
             개발자는 복잡한 초기 설정 없이 핵심 기능 개발에 집중할 수 있습니다.
         </p>
         <a href="https://github.com/MoonChaeWoo/nestjs-starter-kit.git" target="_blank" class="button">GitHub 바로가기</a>
+        <a href="./api-docs" target="_blank" class="button">API-DOCS 바로가기</a>
       </div>
     </body>
     </html>
