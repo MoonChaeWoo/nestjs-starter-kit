@@ -1,4 +1,4 @@
-import {Controller, Post, Body, Patch, Param, Res, Req, Get, ParseIntPipe} from '@nestjs/common';
+import {Controller, Post, Body, Patch, Param, Res, Req, Get, ParseIntPipe, Delete} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import type {MailResponseType, SendMailType} from "../mail/types/mail-types.type";
 import {CreateAuthDto} from "./dto/create-auth.dto";
@@ -6,7 +6,12 @@ import type {AuthUserType} from "./type/auth.type";
 import {UpdateAuthDto} from "./dto/update-auth.dto";
 import type {Response, Request} from "express";
 import {UsersEntity} from "../users/entities/users.entity";
+import {ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags} from "@nestjs/swagger";
+import {AuthUserSwaggerDto} from "./dto/auth-user.swagger.dto";
+import {SendMailSwaggerDto} from "./dto/send-mail.swagger.dto";
+import {MailResponseSwaggerDto} from "./dto/mail-response.swagger.dto";
 
+@ApiTags('Auth - 인증 관리')
 @Controller('auth')
 export class AuthController {
     constructor(private readonly authService: AuthService) {}
@@ -42,6 +47,12 @@ export class AuthController {
      * - 실패 시 예외 발생
      */
     @Post('login')
+    @ApiOperation({
+        summary: '로그인',
+        description: '이메일 또는 아이디와 비밀번호로 사용자 인증 후, accessToken과 refreshToken을 HttpOnly 쿠키로 발급합니다.'
+    })
+    @ApiBody({ type: AuthUserSwaggerDto })
+    @ApiResponse({ status: 200, description: '인증 성공, 사용자 정보 반환', type: UsersEntity })
     loginUser(
         @Res({ passthrough: true }) res: Response,
         @Body() user: AuthUserType
@@ -69,6 +80,12 @@ export class AuthController {
      * }
      */
     @Post('mail')
+    @ApiOperation({
+        summary: '메일 인증 번호 전송',
+        description: '이메일로 인증번호 발송 후, 전송 결과 반환'
+    })
+    @ApiBody({ type: SendMailSwaggerDto })
+    @ApiResponse({ status: 200, description: '메일 전송 결과', type: MailResponseSwaggerDto })
     sendAuthEmail(
         @Body() sendMailDto: SendMailType
     ): Promise<MailResponseType> {
@@ -91,6 +108,12 @@ export class AuthController {
      * }
      */
     @Post('authenticate')
+    @ApiOperation({
+        summary: '사용자 인증',
+        description: '이메일 또는 아이디와 비밀번호로 사용자 인증'
+    })
+    @ApiBody({ type: AuthUserSwaggerDto })
+    @ApiResponse({ status: 200, description: '인증 성공, 사용자 정보 반환', type: UsersEntity })
     userAuthenticate(
         @Body()user: AuthUserType
     ){
@@ -116,6 +139,12 @@ export class AuthController {
      * }
      */
     @Post('register')
+    @ApiOperation({
+        summary: '회원가입',
+        description: '새로운 회원 생성'
+    })
+    @ApiBody({ type: CreateAuthDto })
+    @ApiResponse({ status: 201, description: '회원가입 성공', type: Object })
     registerUser(
         @Body()user: CreateAuthDto
     ){
@@ -147,6 +176,13 @@ export class AuthController {
      * }
      */
     @Patch('update/:uid')
+    @ApiOperation({
+        summary: '회원 정보 수정',
+        description: '회원 정보를 수정합니다. 비밀번호 포함 시 해시 처리됨.'
+    })
+    @ApiParam({ name: 'uid', description: '수정할 회원 UID', example: 1 })
+    @ApiBody({ type: UpdateAuthDto })
+    @ApiResponse({ status: 200, description: '수정 완료, 성공 여부 반환', type: Object })
     updateUser(
         @Param('uid', ParseIntPipe) uid: number,
         @Body()user: UpdateAuthDto
@@ -168,7 +204,13 @@ export class AuthController {
      * GET /auth/delete/1
      * Response: { "message": "회원탈퇴를 완료하였습니다.", "success": true }
      */
-    @Get('delete/:uid')
+    @Delete('delete/:uid')
+    @ApiOperation({
+        summary: '회원 탈퇴 (소프트 삭제)',
+        description: '회원 UID로 소프트 삭제를 수행합니다.'
+    })
+    @ApiParam({ name: 'uid', description: '삭제 대상 회원 UID', example: 1 })
+    @ApiResponse({ status: 200, description: '탈퇴 완료, 성공 여부 반환', type: Object })
     deleteUser(
         @Param('uid', ParseIntPipe) uid: number,
     ){
@@ -205,6 +247,11 @@ export class AuthController {
      * }
      */
     @Get('token/verify')
+    @ApiOperation({
+        summary: 'JWT 토큰 유효성 검증',
+        description: '요청 쿠키에 담긴 accessToken 검증 후 payload 반환'
+    })
+    @ApiResponse({ status: 200, description: '토큰 정상, payload 반환', type: Object })
     verifyToken(
         @Req() req: Request
     ){
@@ -248,6 +295,12 @@ export class AuthController {
      * }
      */
     @Get('token/reissue/:type')
+    @ApiOperation({
+        summary: 'JWT 토큰 재발급',
+        description: `'access', 'refresh', 'all' 타입에 따라 토큰 재발급`
+    })
+    @ApiParam({ name: 'type', description: '재발급할 토큰 타입', example: 'all' })
+    @ApiResponse({ status: 200, description: '토큰 재발급 성공', type: Object })
     reissueToken(
         @Res({ passthrough: true }) res: Response,
         @Req() req: Request,

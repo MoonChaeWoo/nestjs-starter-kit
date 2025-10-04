@@ -16,8 +16,6 @@ import {AuthUserType} from "./type/auth.type";
 import {UpdateAuthDto} from "./dto/update-auth.dto";
 import {Response} from "express";
 import {RoleService} from "../role/role.service";
-import RolesEnum from "../../common/constants/roles.const";
-import {In, Not} from "typeorm";
 
 @Injectable()
 export class AuthService implements OnModuleInit{

@@ -14,6 +14,7 @@ export class RoleService {
     ){}
 
     async grantRolesToUser(role: RolesEnum): Promise<RoleEntity[]>{
+        if(!role) throw new BadRequestException('역할 지정을 하지 않았습니다.');
         try{
             switch(role){
                 case RolesEnum.SUPER_ADMIN:
