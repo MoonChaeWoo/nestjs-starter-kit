@@ -42,7 +42,7 @@ export class CreateAuthDto {
     @ApiPropertyOptional({ description: '회원 활성 상태', default: true })
     @IsOptional()
     @IsBoolean()
-    isActive?: boolean;
+    isActive: boolean = true;
 
     @ApiProperty({
         enum: RolesEnum,

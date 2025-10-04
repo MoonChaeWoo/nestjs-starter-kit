@@ -28,7 +28,7 @@ export class CreateUserDto {
     @ApiPropertyOptional({ description: '회원 활성 상태', default: true })
     @IsOptional()
     @IsBoolean({ message: 'isActive는 boolean 값이어야 합니다.' })
-    isActive?: boolean;
+    isActive: boolean = true;
 
     @ApiProperty({ type: [RoleEntity], description: '사용자 역할 목록' })
     @IsArray({ message: 'roles는 배열이어야 합니다.' })
