@@ -24,7 +24,7 @@ async function bootstrap() {
 
     // Swagger 등록 (API-DOCS)
     const config = new DocumentBuilder()
-        .setTitle('NestJs-starter-kit API')
+        .setTitle('NestJs Starter Kit API')
         .setDescription('NestJs-starter-kit API 사용법')
         .setVersion('1.0.0')
         //.addBearerAuth() // 필요시 인증 추가
