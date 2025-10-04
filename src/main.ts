@@ -8,7 +8,6 @@ import expressLayouts from 'express-ejs-layouts';
 import type{ NestExpressApplication } from '@nestjs/platform-express';
 import * as path from 'path';
 
-
 async function bootstrap() {
     // 초기 데이터 베이스 생성
     await CreateDatabaseService();

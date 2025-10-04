@@ -1,1 +1,3 @@
-console.log("NestJS Starter Kit!!!");
+$('document').ready(() => {
+    console.log("NestJS Starter Kit!!!");
+});
