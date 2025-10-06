@@ -19,8 +19,9 @@ export class UsersService {
      * @returns UsersEntity 배열
      * @throws DB 조회 오류 시 handleUserDbError 호출
      */
-    async getAllUsers(): Promise<UsersEntity[]>{
+    async getAllUsers(userReq: Pick<UsersEntity, 'email' | 'id'>): Promise<UsersEntity[]>{
         try{
+            this.logger.log(`회원 조회 요청자 : ${userReq.id}`);
             return await this.usersRepository.find();
         }catch (error) {
             this.logger.error(error);
@@ -114,15 +115,17 @@ export class UsersService {
 
     /**
      * 회원 소프트 삭제
+     * @param userReq
      * @param uid 삭제 대상 회원 UID
      * @returns UpdateResult
      * @throws DB 삭제 오류 시 handleUserDbError 호출
      */
-    async softDeleteUser(uid: number):Promise<UpdateResult>{
+    async softDeleteUser(userReq: Pick<UsersEntity, 'email' | 'id'>, uid: number):Promise<UpdateResult>{
         try{
             const user = await this.usersRepository.findOneBy({ uid });
             if (!user) throw new NotFoundException("존재하지 않는 회원의 정보를 삭제할 수 없습니다.");
 
+            this.logger.log(`회원 소프트 삭제 요청자 : ${userReq.id}, 회원 삭제 대상자 : uid=${user.id}`);
             return await this.usersRepository.softDelete({uid});
         }catch (error){
             this.logger.error(error);
@@ -132,15 +135,17 @@ export class UsersService {
 
     /**
      * 회원 하드 삭제
+     * @param userReq
      * @param uid 삭제 대상 회원 UID
      * @returns DeleteResult
      * @throws DB 삭제 오류 시 handleUserDbError 호출
      */
-    async hardDeleteUser(uid: number): Promise<DeleteResult>{
+    async hardDeleteUser(userReq: Pick<UsersEntity, 'email' | 'id'>, uid: number): Promise<DeleteResult>{
         try{
             const user = await this.usersRepository.findOneBy({ uid });
             if (!user) throw new NotFoundException("존재하지 않는 회원의 정보를 삭제할 수 없습니다.");
 
+            this.logger.log(`회원 하드 삭제 요청자 : ${userReq.id}, 회원 삭제 대상자 : uid=${user.id}`);
             return await this.usersRepository.delete({uid});
         }catch (error){
             this.logger.error(error);

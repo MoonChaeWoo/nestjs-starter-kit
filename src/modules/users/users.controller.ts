@@ -1,10 +1,12 @@
-import {Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query} from '@nestjs/common';
+import {Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards} from '@nestjs/common';
 import { UsersService } from './users.service';
 import {UpdateUserDto} from "./dto/update-user.dto";
 import {CreateUserDto} from "./dto/create-user.dto";
 import {UsersEntity} from "./entities/users.entity";
 import {DeleteResult, UpdateResult} from "typeorm";
 import {ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags} from "@nestjs/swagger";
+import {BearerTokenGuard} from "../auth/guard/bearer-token.guard";
+import {User} from "./decorator/user.decorator";
 
 @ApiTags('Users - 사용자 관리')
 @Controller('users')
@@ -17,10 +19,13 @@ export class UsersController {
      * GET http://localhost:3000/users
      */
     @Get()
+    @UseGuards(BearerTokenGuard)
     @ApiOperation({ summary: '모든 사용자 조회', description: 'DB에 저장된 모든 사용자 목록을 반환합니다.' })
     @ApiResponse({ status: 200, description: '회원 목록 반환', type: [UsersEntity] })
-    getAllUser(): Promise<UsersEntity[]>{
-        return this.usersService.getAllUsers();
+    getAllUser(
+        @User() userReq: Pick<UsersEntity, 'email' | 'id'>,
+    ): Promise<UsersEntity[]>{
+        return this.usersService.getAllUsers(userReq);
     }
 
     /**
@@ -95,12 +100,14 @@ export class UsersController {
 
     /**
      * 회원 소프트 삭제
+     * @param userReq
      * @param uid 삭제 대상 회원 UID (Param)
      * @returns UpdateResult
      * @example
      * DELETE http://localhost:3000/users/softDelete/1
      */
     @Delete('softDelete/:uid')
+    @UseGuards(BearerTokenGuard)
     @ApiOperation({
         summary: '회원 소프트 삭제',
         description: '회원 UID로 특정 사용자를 소프트 삭제(논리 삭제)합니다.'
@@ -108,19 +115,22 @@ export class UsersController {
     @ApiParam({ name: 'uid', description: '삭제 대상 회원 UID', example: 1 })
     @ApiResponse({ status: 200, description: '회원 소프트 삭제 완료', type: UpdateResult })
     softDelete(
+        @User() userReq: Pick<UsersEntity, 'email' | 'id'>,
         @Param('uid', ParseIntPipe) uid: number
     ): Promise<UpdateResult> {
-        return this.usersService.softDeleteUser(uid);
+        return this.usersService.softDeleteUser(userReq, uid);
     }
 
     /**
      * 회원 하드 삭제
+     * @param userReq
      * @param uid 삭제 대상 회원 UID (Param)
      * @returns DeleteResult
      * @example
      * DELETE http://localhost:3000/users/hardDelete/1
      */
     @Delete('hardDelete/:uid')
+    @UseGuards(BearerTokenGuard)
     @ApiOperation({
         summary: '회원 하드 삭제',
         description: '회원 UID로 특정 사용자를 하드 삭제(데이터 완전 삭제)합니다.'
@@ -128,8 +138,10 @@ export class UsersController {
     @ApiParam({ name: 'uid', description: '삭제 대상 회원 UID', example: 1 })
     @ApiResponse({ status: 200, description: '회원 하드 삭제 완료', type: DeleteResult })
     hardDelete(
+        @User() userReq: Pick<UsersEntity, 'email' | 'id'>,
         @Param('uid', ParseIntPipe) uid: number
     ): Promise<DeleteResult> {
-        return this.usersService.hardDeleteUser(uid);
+        return this.usersService.hardDeleteUser(userReq, uid);
     }
+
 }

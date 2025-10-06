@@ -293,6 +293,7 @@ export class AuthService implements OnModuleInit{
      * - UsersService.softDeleteUser 호출
      * - 해당 uid 회원을 소프트 삭제 처리 (DB에서 완전 삭제하지 않고 삭제 플래그만 설정)
      *
+     * @param userReq
      * @param uid 삭제할 회원의 UID
      * @returns 성공 메시지와 성공 여부 객체
      * @throws DB 삭제 오류 발생 시 예외 발생
@@ -301,9 +302,9 @@ export class AuthService implements OnModuleInit{
      * deleteUser(1)
      * return { message: "회원탈퇴를 완료하였습니다.", success: true }
      */
-    async deleteUser(uid: number) {
+    async deleteUser(userReq: Pick<UsersEntity, 'email' | 'id'>, uid: number) {
         try {
-            await this.usersService.softDeleteUser(uid);
+            await this.usersService.softDeleteUser(userReq, uid);
             return {message : "회원탈퇴를 완료하였습니다.", success : true};
         }catch (error) {
             console.error('회원 탈퇴 오류:', error);
@@ -359,6 +360,7 @@ export class AuthService implements OnModuleInit{
      * @param res Response 객체 (NestJS Response)
      * @param type 'access' | 'refresh' | 'all' 재발급할 토큰 유형
      * @param tokens 기존 accessToken과 refreshToken
+     * @param returnToken 토큰 반환할지 여부
      * @throws BadRequestException: 토큰 미존재 또는 type 오류
      * @throws UnauthorizedException: 토큰 만료 또는 검증 실패
      *
@@ -367,7 +369,7 @@ export class AuthService implements OnModuleInit{
      * GET /auth/token/reissue/all
      * 쿠키: accessToken, refreshToken 새로 발급
      */
-    async reissueToken(res: Response, type : 'access' | 'refresh'| 'all', tokens: TokenType) {
+    async reissueToken(res: Response, type : 'access' | 'refresh'| 'all', tokens: TokenType, returnToken = false) {
         try{
             if(!(tokens.accessToken || tokens.refreshToken)) throw new BadRequestException('검증할 토큰이 존재하지 않습니다.');
             tokens.refreshToken = tokens.refreshToken.replace(/^(base |bearer )/i, '');
@@ -395,7 +397,11 @@ export class AuthService implements OnModuleInit{
                 }else{
                     throw new BadRequestException('재발급할 토큰의 유형을 지정해 주세요.')
                 }
-                return {message : "토큰 재발급이 완료하였습니다.", success : true};
+                if(returnToken){
+                    return {message : "토큰 재발급이 완료하였습니다.", success : true, tokens : {accessToken, refreshToken}};
+                }else{
+                    return {message : "토큰 재발급이 완료하였습니다.", success : true};
+                }
             }else{
                 throw new UnauthorizedException('로그인을 다시 진행해 주세요.');
             }

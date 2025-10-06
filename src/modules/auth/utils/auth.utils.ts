@@ -59,7 +59,7 @@ export const checkExpiresAt = (verificationMap : Map<string, VerificationData>, 
 export const checkExpiredToken = async(token: string): Promise<{payload, pass : boolean}> => {
     try {
         const jwtService = new JwtService();
-        const payload = await jwtService.verify(token, { secret: process.env.JWT_SECRET_KEY});
+        const payload = await jwtService.verify(token.replace(/^(base |bearer )/i, ''), { secret: process.env.JWT_SECRET_KEY});
         return {
             payload,
             pass : true

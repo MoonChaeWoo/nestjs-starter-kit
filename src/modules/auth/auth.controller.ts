@@ -1,4 +1,4 @@
-import {Controller, Post, Body, Patch, Param, Res, Req, Get, ParseIntPipe, Delete} from '@nestjs/common';
+import {Controller, Post, Body, Patch, Param, Res, Req, Get, ParseIntPipe, Delete, UseGuards} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import type {MailResponseType, SendMailType} from "../mail/types/mail-types.type";
 import {CreateAuthDto} from "./dto/create-auth.dto";
@@ -10,6 +10,8 @@ import {ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags} from "@nestjs/swa
 import {AuthUserSwaggerDto} from "./dto/auth-user.swagger.dto";
 import {SendMailSwaggerDto} from "./dto/send-mail.swagger.dto";
 import {MailResponseSwaggerDto} from "./dto/mail-response.swagger.dto";
+import {BearerTokenGuard} from "./guard/bearer-token.guard";
+import {User} from "../users/decorator/user.decorator";
 
 @ApiTags('Auth - 인증 관리')
 @Controller('auth')
@@ -223,6 +225,7 @@ export class AuthController {
      * - path parameter로 회원 UID 전달
      * - AuthService의 deleteUser 호출
      *
+     * @param userReq
      * @param uid 삭제할 회원의 UID
      * @returns 회원 탈퇴 성공 메시지와 성공 여부
      *
@@ -231,6 +234,7 @@ export class AuthController {
      * Response: { "message": "회원탈퇴를 완료하였습니다.", "success": true }
      */
     @Delete('delete/:uid')
+    @UseGuards(BearerTokenGuard)
     @ApiOperation({
         summary: '회원 탈퇴 (소프트 삭제)',
         description: '회원 UID로 소프트 삭제를 수행합니다.'
@@ -238,9 +242,10 @@ export class AuthController {
     @ApiParam({ name: 'uid', description: '삭제 대상 회원 UID', example: 1 })
     @ApiResponse({ status: 200, description: '탈퇴 완료, 성공 여부 반환', type: Object })
     deleteUser(
+        @User() userReq: Pick<UsersEntity, 'email' | 'id'>,
         @Param('uid', ParseIntPipe) uid: number,
     ){
-        return this.authService.deleteUser(uid);
+        return this.authService.deleteUser(userReq, uid);
     }
 
     /**
