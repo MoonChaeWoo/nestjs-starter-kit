@@ -4,33 +4,47 @@ import {UsersEntity} from "../../users/entities/users.entity";
 import {PostEntity} from "../../post/entities/post.entity";
 
 @Entity('files')
-export class FilesEntity extends BaseEntity{
-    @PrimaryGeneratedColumn('uuid')
+export class FilesEntity extends BaseEntity {
+    @PrimaryGeneratedColumn('uuid', {
+        comment: '파일 고유 식별자 (UUID)',
+    })
     uuid: string;
 
-    @Column()
+    @Column({
+        comment: '원본 파일 이름',
+    })
     originalName: string;
 
-    @Column()
+    @Column({
+        comment: '서버에 저장된 파일 이름',
+    })
     storedName: string;
 
-    @Column()
+    @Column({
+        comment: '파일 저장 경로',
+    })
     path: string;
 
-    @Column()
+    @Column({
+        comment: '파일 확장자 (예: jpg, png)',
+    })
     extension: string;
 
-    @Column()
+    @Column({
+        comment: '파일 크기 (바이트 단위)',
+    })
     size: number;
 
-    @Column()
+    @Column({
+        comment: '파일 MIME 타입 (예: image/png, application/pdf)',
+    })
     mimeType: string;
 
-    @ManyToOne(_ => PostEntity, post => post.files)
+    @ManyToOne(() => PostEntity, post => post.files)
     @JoinColumn()
-    post : PostEntity;
+    post: PostEntity;
 
-    @ManyToOne(_ => UsersEntity, (users) => users.files, { nullable: false, eager: true })
+    @ManyToOne(() => UsersEntity, users => users.files, { nullable: false, eager: true })
     @JoinColumn()
     uploadedBy: UsersEntity;
 }

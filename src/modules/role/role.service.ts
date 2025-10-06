@@ -2,7 +2,7 @@ import {BadRequestException, Injectable, Logger, NotFoundException} from '@nestj
 import {InjectRepository} from "@nestjs/typeorm";
 import {RoleEntity} from "./entities/role.entity";
 import {In, Not, Repository} from "typeorm";
-import RolesEnum from "../../common/constants/roles.const";
+import UserRoleEnum from "../../common/constants/user.const";
 
 @Injectable()
 export class RoleService {
@@ -13,18 +13,18 @@ export class RoleService {
         private readonly roleRepository: Repository<RoleEntity>
     ){}
 
-    async grantRolesToUser(role: RolesEnum): Promise<RoleEntity[]>{
-        if(!role) throw new BadRequestException('역할 지정을 하지 않았습니다.');
+    async grantRolesToUser(userType: UserRoleEnum): Promise<RoleEntity[]>{
+        if(!userType) throw new BadRequestException('유저의 타입을 지정해주세요.');
         try{
-            switch(role){
-                case RolesEnum.SUPER_ADMIN:
+            switch(userType){
+                case UserRoleEnum.ADMIN:
                     return await this.grantSuperUser();
-                case RolesEnum.MANAGER:
+                case UserRoleEnum.MANAGER:
                     return await this.grantManager();
-                case RolesEnum.CONTENT_EDITOR:
-                    return await this.grantContentEditor();
-                case RolesEnum.VIEWER:
-                    return await this.grantViewer();
+                case UserRoleEnum.USER:
+                    return await this.grantUser();
+                case UserRoleEnum.GUEST:
+                    return await this.grantGuest();
                 default:
                     throw new BadRequestException('잘못된 역할 요청을 하였습니다.');
             }
@@ -40,19 +40,19 @@ export class RoleService {
 
     async grantManager(){
         return this.roleRepository.find({
-            where: { name: Not(In(['SUPER_ADMIN'])) }
+            where: { name: Not(In(['ADMIN'])) }
         });
     }
 
-    async grantContentEditor(){
+    async grantUser(){
         return this.roleRepository.find({
-            where: { name: Not(In(['SUPER_ADMIN', 'MANAGER'])) }
+            where: { name: Not(In(['ADMIN', 'MANAGER'])) }
         });
     }
 
-    async grantViewer(){
+    async grantGuest(){
         return this.roleRepository.find({
-            where: { name: Not(In(['VIEWER'])) }
+            where: { name: Not(In(['ADMIN', 'MANAGER', 'USER'])) }
         });
     }
 }

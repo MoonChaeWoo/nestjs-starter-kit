@@ -1,6 +1,6 @@
-import RolesEnum from "../../../common/constants/roles.const";
 import {IsBoolean, IsEmail, IsEnum, IsOptional, IsString, Matches, MaxLength, MinLength} from "class-validator";
 import {ApiProperty, ApiPropertyOptional} from "@nestjs/swagger";
+import UserRoleEnum from "../../../common/constants/user.const";
 
 export class CreateAuthDto {
     @ApiProperty({
@@ -45,9 +45,9 @@ export class CreateAuthDto {
     isActive: boolean = true;
 
     @ApiProperty({
-        enum: RolesEnum,
+        enum: UserRoleEnum,
         description: '회원 역할'
     })
-    @IsEnum(RolesEnum, { message: '유효한 역할이어야 합니다.' })
-    role: RolesEnum;
+    @IsEnum(UserRoleEnum, { message: '유효한 역할이어야 합니다.' })
+    role: UserRoleEnum = UserRoleEnum.USER;
 }

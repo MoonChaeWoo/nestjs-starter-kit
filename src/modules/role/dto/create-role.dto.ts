@@ -1,6 +1,6 @@
-import RolesEnum from "../../../common/constants/roles.const";
+import UserRoleEnum from "../../../common/constants/user.const";
 
 export class CreateRoleDto {
-    name: RolesEnum;
+    name: UserRoleEnum;
     description: string;
 }

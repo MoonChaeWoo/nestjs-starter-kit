@@ -2,11 +2,11 @@ import {Injectable, OnModuleInit} from "@nestjs/common";
 import {DataSource, Repository} from "typeorm";
 import {RoleEntity} from "../../../modules/role/entities/role.entity";
 import PermissionEnum from "../../../common/constants/permission.const";
-import RolesEnum from "../../../common/constants/roles.const";
 import {PermissionEntity} from "../../../modules/permission/entities/permission.entity";
+import UserRoleEnum from "../../../common/constants/user.const";
 
 type AccessEntity = PermissionEntity | RoleEntity;
-type AccessEnum = PermissionEnum | RolesEnum;
+type AccessEnum = PermissionEnum | UserRoleEnum;
 
 /**
  * InitialDataDatabaseService
@@ -19,7 +19,7 @@ type AccessEnum = PermissionEnum | RolesEnum;
  * 동작 순서:
  * 1. onModuleInit 실행됨 → 모듈 초기화 시 자동 호출됨
  * 2. PermissionEntity, RoleEntity 레포지토리 가져옴
- * 3. accessControlReady 호출 → PermissionEnum, RolesEnum 기준으로 데이터 존재 여부 확인
+ * 3. accessControlReady 호출 → PermissionEnum, UserRoleEnum 기준으로 데이터 존재 여부 확인
  *    - 없으면 자동 생성함
  * 4. linkRolesPermissions 호출 → 각 역할(Role)에 기본 권한(Permission) 연결
  * 5. 모든 작업 완료 시 로그 출력함
@@ -47,7 +47,7 @@ export class InitialDataDatabaseService implements OnModuleInit{
 
             // 권한 관련 데이터 세팅
             await this.accessControlReady(permRepository, PermissionEnum);
-            await this.accessControlReady(roleRepository, RolesEnum);
+            await this.accessControlReady(roleRepository, UserRoleEnum);
             await this.linkRolesPermissions(permRepository, roleRepository);
 
             console.log('권한 관련 데이터 세팅 완료');
@@ -79,22 +79,46 @@ export class InitialDataDatabaseService implements OnModuleInit{
                 // 역할별 기본 권한 지정
                 // 디폴트 권한 배열에 지정
                 switch (role.name) {
-                    case RolesEnum.SUPER_ADMIN:
+                    case UserRoleEnum.ADMIN:
                         assigned = permissions; // 모든 권한
                         break;
-                    case RolesEnum.MANAGER:
+                    case UserRoleEnum.MANAGER:
                         assigned = permissions.filter(p =>
-                            [PermissionEnum.READ_USER, PermissionEnum.WRITE_USER, PermissionEnum.READ_POST].includes(p.name as PermissionEnum),
+                            ![
+                                PermissionEnum.PERMISSION_MODIFY,
+                            ].includes(p.name as PermissionEnum),
                         );
                         break;
-                    case RolesEnum.CONTENT_EDITOR:
+                    case UserRoleEnum.USER:
                         assigned = permissions.filter(p =>
-                            [PermissionEnum.READ_POST, PermissionEnum.WRITE_POST].includes(p.name as PermissionEnum),
+                            ![
+                                PermissionEnum.DELETE_HARD_USER,
+                                PermissionEnum.DELETE_HARD_GROUP,
+                                PermissionEnum.DELETE_HARD_MAIL,
+                                PermissionEnum.DELETE_HARD_POST,
+                                PermissionEnum.DELETE_HARD_COMMENT,
+                                PermissionEnum.DELETE_HARD_FILE,
+                                PermissionEnum.PERMISSION_MODIFY,
+                            ].includes(p.name as PermissionEnum),
                         );
                         break;
-                    case RolesEnum.VIEWER:
+                    case UserRoleEnum.GUEST:
                         assigned = permissions.filter(p =>
-                            [PermissionEnum.READ_USER, PermissionEnum.READ_POST].includes(p.name as PermissionEnum),
+                            [
+                                PermissionEnum.DELETE_SOFT_USER,
+                                PermissionEnum.DELETE_SOFT_GROUP,
+                                PermissionEnum.DELETE_SOFT_MAIL,
+                                PermissionEnum.DELETE_SOFT_POST,
+                                PermissionEnum.DELETE_SOFT_COMMENT,
+                                PermissionEnum.DELETE_SOFT_FILE,
+                                PermissionEnum.DELETE_HARD_USER,
+                                PermissionEnum.DELETE_HARD_GROUP,
+                                PermissionEnum.DELETE_HARD_MAIL,
+                                PermissionEnum.DELETE_HARD_POST,
+                                PermissionEnum.DELETE_HARD_COMMENT,
+                                PermissionEnum.DELETE_HARD_FILE,
+                                PermissionEnum.PERMISSION_MODIFY,
+                            ].includes(p.name as PermissionEnum),
                         );
                         break;
                 }

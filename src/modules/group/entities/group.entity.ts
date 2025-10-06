@@ -5,13 +5,21 @@ import {RoleEntity} from "../../role/entities/role.entity";
 
 @Entity('groups')
 export class GroupEntity extends BaseEntity{
-    @PrimaryGeneratedColumn()
+    @PrimaryGeneratedColumn({
+        comment: '그룹 고유 식별자 (자동 증가 PK)',
+    })
     uid: number;
 
-    @Column({unique: true})
+    @Column({
+        unique: true,
+        comment: '그룹 이름 (중복 불가)',
+    })
     name: string;
 
-    @Column({nullable: true})
+    @Column({
+        nullable: true,
+        comment: '그룹 설명',
+    })
     description: string;
 
     @ManyToMany(_ => UsersEntity, (users) => users.group)

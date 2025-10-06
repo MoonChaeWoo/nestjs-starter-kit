@@ -11,11 +11,12 @@ import {BaseEntity} from "../../../common/entities/base.entity";
 import {FilesEntity} from "../../files/entities/files.entity";
 import {GroupEntity} from "../../group/entities/group.entity";
 import {RoleEntity} from "../../role/entities/role.entity";
-import RolesEnum from "../../../common/constants/roles.const";
 
 @Entity('users')
 export class UsersEntity extends BaseEntity{
-    @PrimaryGeneratedColumn()
+    @PrimaryGeneratedColumn({
+        comment: '사용자 고유 식별자 (자동 증가 PK)',
+    })
     uid: number;
 
     @ManyToMany(_ => GroupEntity, (group) => group.users)
@@ -24,34 +25,45 @@ export class UsersEntity extends BaseEntity{
     @Column({
         unique : true,
         length : 20,
+        comment: '로그인용 사용자 ID (중복 불가)'
     })
     id: string;
 
     @Column({
         unique : true,
         length : 20,
+        comment: '사용자 닉네임 (중복 불가)'
     })
     nickname: string;
 
     @Column({
         unique : true,
+        comment: '사용자 이메일 (중복 불가)'
     })
     email: string;
 
-    @Column()
+    @Column({
+        comment: '비밀번호 (해시된 문자열)',
+    })
     password: string;
 
     @Column({
         type: 'enum',
         enum: Object.values(UserRoleEnum),
         default: UserRoleEnum.USER,
+        comment: '사용자 유형 (ADMIN, USER, GUEST 등)',
     })
-    userType: UserRoleEnum;
+    role: UserRoleEnum;
 
-    @Column({ default: true })
+    @Column({
+        default: true,
+        comment: '계정 활성화 여부 (true: 활성, false: 비활성)',
+    })
     isActive?: boolean;
 
-    @VersionColumn()
+    @VersionColumn({
+        comment: '버전 관리용 컬럼 (낙관적 락)'
+    })
     version: number;
 
     @OneToMany(_ => PostEntity, posts => posts.author, { cascade: ['insert', 'update'] })
@@ -63,16 +75,4 @@ export class UsersEntity extends BaseEntity{
     @ManyToMany(() => RoleEntity, role => role.users)
     @JoinTable()
     roles: RoleEntity[];
-
-    get effectiveRoles(): RolesEnum[] {
-        if (this.roles && this.roles.length) {
-            return this.roles.map(r => r.name);
-        }
-        // roles 비어있으면 userType 기준 기본 역할 반환
-        switch(this.userType) {
-            case UserRoleEnum.ADMIN: return [RolesEnum.SUPER_ADMIN];
-            case UserRoleEnum.USER: return [RolesEnum.CONTENT_EDITOR, RolesEnum.VIEWER];
-            case UserRoleEnum.GUEST: return [RolesEnum.VIEWER];
-        }
-    }
 }

@@ -9,7 +9,7 @@ import type{ NestExpressApplication } from '@nestjs/platform-express';
 import * as path from 'path';
 
 async function bootstrap() {
-    // 초기 데이터 베이스 생성
+    // 초기 데이터 베이스 생성 -> 생성 이후 InitialDataDatabaseService에서 데이터 베이스 권한과 역할 기본 데이터 생성
     await CreateDatabaseService();
 
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
