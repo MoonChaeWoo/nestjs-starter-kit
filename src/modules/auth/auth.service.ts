@@ -1,4 +1,11 @@
-import {BadRequestException, Injectable, Logger, OnModuleInit, UnauthorizedException} from '@nestjs/common';
+import {
+    BadRequestException,
+    Injectable,
+    InternalServerErrorException,
+    Logger,
+    OnModuleInit,
+    UnauthorizedException
+} from '@nestjs/common';
 import {MailerService} from "@nestjs-modules/mailer";
 import {MailResponseType, SendMailType} from "../mail/types/mail-types.type";
 import {AuthEmailContext, TokenType, VerificationData} from "./interface/auth.interface";
@@ -21,6 +28,7 @@ import {RoleService} from "../role/role.service";
 export class AuthService implements OnModuleInit{
     private readonly logger = new Logger(AuthService.name);
     private readonly verificationMap = new Map<string, VerificationData>();
+    public forceCookieReset : boolean = false;
 
     constructor(
         private readonly jwtService: JwtService,
@@ -54,6 +62,31 @@ export class AuthService implements OnModuleInit{
 
             this.schedulerRegistry.addCronJob(jobName, job);
             job.start();
+        }
+    }
+
+    /**
+     * 강제 쿠키 초기화 설정 처리
+     *
+     * - 내부 상태 변수(this.forceCookieReset)를 변경
+     * - true일 경우, 로그인 또는 인증 시 쿠키를 강제로 초기화하도록 설정
+     *
+     * @param forceClear 강제 초기화 여부 (true | false)
+     * @returns 설정 결과 메시지와 성공 여부
+     *
+     * @example
+     * setForceCookieReset(true)
+     * => { message: "강제 쿠키 초기화 설정 : true", success: true }
+     */
+    setForceCookieReset(forceClear : boolean) {
+        try{
+            this.forceCookieReset = forceClear;
+            return {
+                message : `강제 쿠키 초기화 설정 : ${this.forceCookieReset}`,
+                success : true
+            };
+        }catch (error) {
+            throw new InternalServerErrorException(error);
         }
     }
 

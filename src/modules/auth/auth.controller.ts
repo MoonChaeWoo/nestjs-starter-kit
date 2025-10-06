@@ -1,4 +1,17 @@
-import {Controller, Post, Body, Patch, Param, Res, Req, Get, ParseIntPipe, Delete, UseGuards} from '@nestjs/common';
+import {
+    Controller,
+    Post,
+    Body,
+    Patch,
+    Param,
+    Res,
+    Req,
+    Get,
+    ParseIntPipe,
+    Delete,
+    UseGuards,
+    Query, ParseBoolPipe
+} from '@nestjs/common';
 import { AuthService } from './auth.service';
 import type {MailResponseType, SendMailType} from "../mail/types/mail-types.type";
 import {CreateAuthDto} from "./dto/create-auth.dto";
@@ -6,7 +19,7 @@ import type {AuthUserType} from "./type/auth.type";
 import {UpdateAuthDto} from "./dto/update-auth.dto";
 import type {Response, Request} from "express";
 import {UsersEntity} from "../users/entities/users.entity";
-import {ApiBody, ApiOperation, ApiParam, ApiResponse, ApiTags} from "@nestjs/swagger";
+import {ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags} from "@nestjs/swagger";
 import {AuthUserSwaggerDto} from "./dto/auth-user.swagger.dto";
 import {SendMailSwaggerDto} from "./dto/send-mail.swagger.dto";
 import {MailResponseSwaggerDto} from "./dto/mail-response.swagger.dto";
@@ -146,6 +159,49 @@ export class AuthController {
         @Body()user: AuthUserType
     ){
         return this.authService.userAuthenticate(user);
+    }
+
+    /**
+     * 로그인하는 유저의 쿠키를 강제 초기화 설정
+     *
+     * - GET /auth/setForceCookieReset?forceClear={true|false}
+     * - 쿼리 파라미터로 강제 쿠키 초기화 여부를 전달받음
+     * - AuthService의 setForceCookieReset 메서드 호출
+     *
+     * @param forceClear 강제 쿠키 초기화 여부 (true 시 모든 쿠키 삭제를 강제함)
+     * @returns 설정 결과 메시지와 성공 여부
+     *
+     * @example
+     * GET /auth/setForceCookieReset?forceClear=true
+     * Response: { "message": "강제 쿠키 초기화 설정 : true", "success": true }
+     */
+    @ApiOperation({
+        summary: '로그인하는 유저의 쿠키를 강제 초기화 설정',
+        description:
+            '쿼리 파라미터 `forceClear`를 통해 쿠키 초기화 여부를 설정합니다. true 시 모든 쿠키 삭제를 강제합니다.',
+    })
+    @ApiQuery({
+        name: 'forceClear',
+        required: true,
+        type: Boolean,
+        description: '강제 쿠키 초기화 여부 (true 시 모든 쿠키 삭제를 강제)',
+        example: true,
+    })
+    @ApiResponse({
+        status: 200,
+        description: '설정 결과 메시지와 성공 여부를 반환',
+        schema: {
+            example: {
+                message: '강제 쿠키 초기화 설정 : true',
+                success: true,
+            },
+        },
+    })
+    @Get('setForceCookieReset')
+    setForceCookieReset(
+        @Query('forceClear', ParseBoolPipe) forceClear : boolean
+    ) {
+        return this.authService.setForceCookieReset(forceClear);
     }
 
     /** ===================== 회원 가입, 수정, 탈퇴 ===================== */
