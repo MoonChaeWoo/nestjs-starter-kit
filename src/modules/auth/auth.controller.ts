@@ -15,7 +15,6 @@ import {
 import { AuthService } from './auth.service';
 import type {MailResponseType, SendMailType} from "../mail/types/mail-types.type";
 import {CreateAuthDto} from "./dto/create-auth.dto";
-import type {AuthUserType} from "./type/auth.type";
 import {UpdateAuthDto} from "./dto/update-auth.dto";
 import type {Response, Request} from "express";
 import {UsersEntity} from "../users/entities/users.entity";
@@ -25,6 +24,8 @@ import {SendMailSwaggerDto} from "./dto/send-mail.swagger.dto";
 import {MailResponseSwaggerDto} from "./dto/mail-response.swagger.dto";
 import {BearerTokenGuard} from "./guard/bearer-token.guard";
 import {User} from "../users/decorator/user.decorator";
+import {AuthenticateDto} from "./dto/authenticate-auth.dto";
+import {LoginAuthDto} from "./dto/login-auth.dto";
 
 @ApiTags('Auth - 인증 관리')
 @Controller('auth')
@@ -70,7 +71,7 @@ export class AuthController {
     @ApiResponse({ status: 200, description: '인증 성공, 사용자 정보 반환', type: UsersEntity })
     loginUser(
         @Res({ passthrough: true }) res: Response,
-        @Body() user: AuthUserType
+        @Body() user: LoginAuthDto
     ): Promise<Pick<UsersEntity, 'email' | 'id' | 'nickname'>>{
         return this.authService.loginUser(res, user);
     }
@@ -156,7 +157,7 @@ export class AuthController {
     @ApiBody({ type: AuthUserSwaggerDto })
     @ApiResponse({ status: 200, description: '인증 성공, 사용자 정보 반환', type: UsersEntity })
     userAuthenticate(
-        @Body()user: AuthUserType
+        @Body()user: AuthenticateDto
     ){
         return this.authService.userAuthenticate(user);
     }

@@ -82,7 +82,7 @@ export class UsersController {
      * PATCH http://localhost:3000/users/1
      * Body: { "nickname": "newNickname" }
      */
-    @Patch(':uid')
+    @Patch('update/:uid')
     @ApiOperation({
         summary: '회원 정보 업데이트',
         description: '회원 UID로 특정 사용자를 찾아 닉네임 등 정보를 수정합니다.'

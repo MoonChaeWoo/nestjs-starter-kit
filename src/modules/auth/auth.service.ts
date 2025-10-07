@@ -19,10 +19,11 @@ import {UsersService} from "../users/users.service";
 import * as bcrypt from 'bcrypt';
 import {CreateAuthDto} from "./dto/create-auth.dto";
 import {HASH_ROUNDS} from "./constants/auth.constants";
-import {AuthUserType} from "./type/auth.type";
 import {UpdateAuthDto} from "./dto/update-auth.dto";
 import {Response} from "express";
 import {RoleService} from "../role/role.service";
+import {AuthenticateDto} from "./dto/authenticate-auth.dto";
+import {LoginAuthDto} from "./dto/login-auth.dto";
 
 @Injectable()
 export class AuthService implements OnModuleInit{
@@ -123,10 +124,10 @@ export class AuthService implements OnModuleInit{
      * @param user 인증된 사용자 정보 (email, id, password)
      * @returns accessToken, refreshToken 포함 객체
      */
-    signToken(user: AuthUserType): TokenType{
+    signToken(user: AuthenticateDto): TokenType {
         return {
-            accessToken : this.generateToken(user, false),
-            refreshToken : this.generateToken(user, true)
+            accessToken: this.generateToken(user, false),
+            refreshToken: this.generateToken(user, true)
         }
     }
 
@@ -142,7 +143,7 @@ export class AuthService implements OnModuleInit{
      * @returns { email, id, nickname } 인증된 사용자 정보
      * @throws 인증 실패 시 UnauthorizedException 또는 기타 예외 발생
      */
-    async loginUser(res: Response, user: AuthUserType): Promise<Pick<UsersEntity, 'email' | 'id' | 'nickname'>>{
+    async loginUser(res: Response, user: LoginAuthDto): Promise<Pick<UsersEntity, 'email' | 'id' | 'nickname'>>{
         try{
             const targetUser = await this.userAuthenticate(user);
             const {accessToken, refreshToken} = this.signToken(targetUser);
@@ -274,7 +275,7 @@ export class AuthService implements OnModuleInit{
      * @returns 인증된 UsersEntity
      * @throws Error | UnauthorizedException
      */
-    async userAuthenticate(user: AuthUserType): Promise<UsersEntity> {
+    async userAuthenticate(user: LoginAuthDto): Promise<UsersEntity> {
         try{
             if(!(user.email || user.id)) throw new Error('Email 또는 Id 둘중 하나는 필수 입력입니다.');
 
