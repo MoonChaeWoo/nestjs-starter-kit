@@ -1,7 +1,7 @@
 import { BaseEntity } from '../../../common/entities/base.entity';
 import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { RoleEntity } from '../../role/entities/role.entity';
-import PermissionEnum from "../../../common/constants/permission.const";
+import PermissionEnum from "../../../common/constants/permission.constant";
 
 @Entity('permissions')
 export class PermissionEntity extends BaseEntity {

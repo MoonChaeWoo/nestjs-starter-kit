@@ -1,9 +1,9 @@
 import {Injectable, OnModuleInit} from "@nestjs/common";
 import {DataSource, Repository} from "typeorm";
 import {RoleEntity} from "../../../modules/role/entities/role.entity";
-import PermissionEnum from "../../../common/constants/permission.const";
+import PermissionEnum from "../../../common/constants/permission.constant";
 import {PermissionEntity} from "../../../modules/permission/entities/permission.entity";
-import UserRoleEnum from "../../../common/constants/user.const";
+import UserRoleEnum from "../../../common/constants/user.constant";
 
 type AccessEntity = PermissionEntity | RoleEntity;
 type AccessEnum = PermissionEnum | UserRoleEnum;

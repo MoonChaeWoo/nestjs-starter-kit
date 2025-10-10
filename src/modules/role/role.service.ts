@@ -1,8 +1,8 @@
-import {BadRequestException, Injectable, Logger, NotFoundException} from '@nestjs/common';
+import {BadRequestException, Injectable, Logger } from '@nestjs/common';
 import {InjectRepository} from "@nestjs/typeorm";
 import {RoleEntity} from "./entities/role.entity";
 import {In, Not, Repository} from "typeorm";
-import UserRoleEnum from "../../common/constants/user.const";
+import UserRoleEnum from "../../common/constants/user.constant";
 
 @Injectable()
 export class RoleService {

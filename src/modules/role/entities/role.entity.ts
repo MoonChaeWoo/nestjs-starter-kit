@@ -1,7 +1,7 @@
 import {Column, Entity, JoinTable, ManyToMany, PrimaryGeneratedColumn} from "typeorm";
 import {UsersEntity} from "../../users/entities/users.entity";
 import {PermissionEntity} from "../../permission/entities/permission.entity";
-import UserRoleEnum from "../../../common/constants/user.const";
+import UserRoleEnum from "../../../common/constants/user.constant";
 
 @Entity('roles')
 export class RoleEntity {

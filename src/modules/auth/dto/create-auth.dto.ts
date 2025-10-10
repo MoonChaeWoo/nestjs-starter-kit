@@ -1,6 +1,6 @@
 import {IsBoolean, IsEmail, IsEnum, IsOptional, IsString, Matches, MaxLength, MinLength} from "class-validator";
 import {ApiProperty, ApiPropertyOptional} from "@nestjs/swagger";
-import UserRoleEnum from "../../../common/constants/user.const";
+import UserRoleEnum from "../../../common/constants/user.constant";
 
 export class CreateAuthDto {
     @ApiProperty({

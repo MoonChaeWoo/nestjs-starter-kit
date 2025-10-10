@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import {ClassSerializerInterceptor, Module} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { UsersModule } from './modules/users/users.module';
@@ -17,6 +17,8 @@ import {MailerModule} from "@nestjs-modules/mailer";
 import {GoogleMailConfig} from "./config/mail/google/smtp.config";
 import { MailModule } from './modules/mail/mail.module';
 import {ScheduleModule} from "@nestjs/schedule";
+import {APP_INTERCEPTOR} from "@nestjs/core";
+import { SchedulerModule } from './modules/scheduler/scheduler.module';
 
 @Module({
     imports: [
@@ -36,8 +38,12 @@ import {ScheduleModule} from "@nestjs/schedule";
         RoleModule,
         PermissionModule,
         MailModule,
+        SchedulerModule,
     ],
     controllers: [AppController],
-    providers: [AppService, InitialDataDatabaseService],
+    providers: [AppService, InitialDataDatabaseService, {
+        provide : APP_INTERCEPTOR,
+        useClass : ClassSerializerInterceptor
+    }],
 })
 export class AppModule {}
