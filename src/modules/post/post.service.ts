@@ -5,6 +5,8 @@ import {PostEntity} from "./entities/post.entity";
 import {UsersEntity} from "../users/entities/users.entity";
 import {PaginatePostDto} from "./dto/paginate-post.dto";
 import {ScrollPagination} from "../../common/utils/paginate/scroll-pagination.utils";
+import type {MulterFile} from "../../common/type/common.type";
+import {FilesService} from "../files/files.service";
 
 @Injectable()
 export class PostService {
@@ -13,6 +15,7 @@ export class PostService {
         private readonly postRepository: Repository<PostEntity>,
         @InjectRepository(UsersEntity)
         private readonly usersRepository: Repository<UsersEntity>,
+        private readonly fileService: FilesService,
     ) {}
 
     async paginatePost(query: PaginatePostDto) {
@@ -52,8 +55,10 @@ export class PostService {
         });
     }
 
-    uploadPost() {
-
+    uploadPost(file : MulterFile) {
+        console.log('file => ');
+        console.dir(file);
+        this.fileService.uploadBFileDisk(file, 'tyche0322')
     }
 
     updatePost() {
@@ -66,5 +71,11 @@ export class PostService {
 
     deleteHardPost() {
 
+    }
+
+    uploadSmallFilePost(file: MulterFile[]) {
+        console.log('file memory => ');
+        console.dir(file);
+        this.fileService.uploadFileMemory('post', file, 'tyche0322')
     }
 }

@@ -1,5 +1,7 @@
 import {ApiProperty, ApiPropertyOptional} from "@nestjs/swagger";
-import {IsNumber, IsOptional, IsString, IsUUID} from "class-validator";
+import {IsArray, IsNumber, IsOptional, IsString, IsUUID, ValidateNested} from "class-validator";
+import {UsersEntity} from "../../users/entities/users.entity";
+import {PostEntity} from "../../post/entities/post.entity";
 
 export class CreateFileDto {
     @ApiProperty({ example: 'original_file.jpg', description: '원본 파일 이름' })
@@ -22,16 +24,19 @@ export class CreateFileDto {
     @IsNumber({}, { message: 'size는 숫자여야 합니다.' })
     size: number;
 
+    @ApiProperty({ example: '/upload/file.webp', description: '썸네일 파일 저장' })
+    @IsString({ message: 'thumbnail은 문자열이어야 합니다.' })
+    thumbnail?: string;
+
     @ApiProperty({ example: 'image/jpeg', description: '파일 MIME 타입' })
     @IsString({ message: 'mimeType은 문자열이어야 합니다.' })
-    mimeType: string;
+    mimetype: string;
 
-    @ApiPropertyOptional({ example: 'post-uuid', description: '연관 게시글 UUID (선택)' })
-    @IsOptional()
-    @IsUUID(undefined, { message: 'post는 UUID 형식이어야 합니다.' })
-    post?: string;
+    @ApiProperty({ type: PostEntity, description: '게시글 엔티티' })
+    @ValidateNested()
+    post?: PostEntity;
 
-    @ApiProperty({ example: 'user-uuid', description: '업로더 UUID' })
-    @IsUUID(undefined, { message: 'uploadedBy는 UUID 형식이어야 합니다.' })
-    uploadedBy: string;
+    @ApiProperty({ type: UsersEntity, description: '사용자 엔티티' })
+    @ValidateNested()
+    uploadedBy: UsersEntity;
 }

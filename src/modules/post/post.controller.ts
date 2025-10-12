@@ -1,10 +1,27 @@
-import {Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards} from '@nestjs/common';
+import {
+    Controller,
+    Delete,
+    Get,
+    Param,
+    ParseIntPipe,
+    Patch,
+    Post,
+    Query,
+    UploadedFile,
+    UploadedFiles,
+    UseGuards,
+    UseInterceptors
+} from '@nestjs/common';
 import { PostService } from './post.service';
 import {BearerTokenGuard} from "../auth/guard/bearer-token.guard";
 import {User} from "../users/decorator/user.decorator";
 import {UsersEntity} from "../users/entities/users.entity";
-import {BasePaginateDto} from "../../common/utils/paginate/dto/base-paginate.dto";
 import {PaginatePostDto} from "./dto/paginate-post.dto";
+import {FileInterceptor, FilesInterceptor} from "@nestjs/platform-express";
+import type {MulterFile} from "../../common/type/common.type";
+import {MemoryFileUploadConfig} from "../../config/file/memory-file-upload.config";
+
+const MemoryFileUpload = MemoryFileUploadConfig();
 
 @Controller('post')
 export class PostController {
@@ -35,8 +52,19 @@ export class PostController {
     }
 
     @Post('upload')
-    uploadPost(){
-        return this.postService.uploadPost();
+    @UseInterceptors(FileInterceptor('file')) // HTML form의 <input type="file" name="file" /> 에서 name 속성과 일치해야 함
+    uploadPost(
+        @UploadedFile() file: MulterFile,
+    ){
+        return this.postService.uploadPost(file);
+    }
+
+    @Post('upload/small')
+    @UseInterceptors(FilesInterceptor('file', Infinity, MemoryFileUploadConfig())) // HTML form의 <input type="file" name="file" /> 에서 name 속성과 일치해야 함
+    uploadSmallFilePost(
+        @UploadedFiles() file: MulterFile[],
+    ){
+        return this.postService.uploadSmallFilePost(file);
     }
 
     @Patch('update/:uid')

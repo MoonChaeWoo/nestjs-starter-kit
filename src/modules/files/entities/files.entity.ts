@@ -38,7 +38,13 @@ export class FilesEntity extends BaseEntity {
     @Column({
         comment: '파일 MIME 타입 (예: image/png, application/pdf)',
     })
-    mimeType: string;
+    mimetype: string;
+
+    @Column({
+        comment: '썸네일 파일 위치',
+        nullable: true,
+    })
+    thumbnail?: string;
 
     @ManyToOne(() => PostEntity, post => post.files)
     @JoinColumn()
