@@ -1,4 +1,4 @@
-import {Injectable, NotFoundException, UnauthorizedException} from '@nestjs/common';
+import {Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException} from '@nestjs/common';
 import {InjectRepository} from "@nestjs/typeorm";
 import {Repository} from "typeorm";
 import {PostEntity} from "./entities/post.entity";
@@ -7,6 +7,7 @@ import {PaginatePostDto} from "./dto/paginate-post.dto";
 import {ScrollPagination} from "../../common/utils/paginate/scroll-pagination.utils";
 import type {MulterFile} from "../../common/type/common.type";
 import {FilesService} from "../files/files.service";
+import {CreatePostDto} from "./dto/create-post.dto";
 
 @Injectable()
 export class PostService {
@@ -55,10 +56,52 @@ export class PostService {
         });
     }
 
-    uploadPost(file : MulterFile) {
-        console.log('file => ');
-        console.dir(file);
-        this.fileService.uploadBFileDisk(file, 'tyche0322')
+    async uploadBFileDiskPost(post: CreatePostDto, userReq: Pick<UsersEntity, 'email' | 'id'>, files : MulterFile[]) {
+        try{
+            const user = await this.usersRepository.findOne({where: {id : userReq.id}});
+            if(!user) throw new UnauthorizedException('유효하지 않은 사용자입니다.');
+            const postCreate = this.postRepository.create(post);
+            const postSave = await this.postRepository.save({...postCreate, author : user});
+
+            const {success, message, count} = await this.fileService.uploadBFileDisk(
+                files, userReq.id, {entity: postSave, type : 'PostEntity'}
+            );
+            if(!success){
+                throw new InternalServerErrorException('file upload error => ', message);
+            }
+
+            return {
+                success : true,
+                message : '게시글 등록 완료',
+                files_count: count
+            }
+        }catch(error){
+            throw error;
+        }
+    }
+
+    async uploadFileMemoryPost(post: CreatePostDto, userReq: Pick<UsersEntity, 'email' | 'id'>, file: MulterFile[]) {
+        try{
+            const user = await this.usersRepository.findOne({where: {id : userReq.id}});
+            if(!user) throw new UnauthorizedException('유효하지 않은 사용자입니다.');
+            const postCreate = this.postRepository.create(post);
+            const postSave = await this.postRepository.save({...postCreate, author : user});
+
+            const {success, message, count} = await this.fileService.uploadFileMemory(
+                'post', file, userReq.id, {entity: postSave, type : 'PostEntity'}
+            );
+            if(!success){
+                throw new InternalServerErrorException('file upload error => ', message);
+            }
+
+            return {
+                success : true,
+                message : '게시글 등록 완료',
+                files_count: count
+            }
+        }catch(error){
+            throw error;
+        }
     }
 
     updatePost() {
@@ -73,9 +116,4 @@ export class PostService {
 
     }
 
-    uploadSmallFilePost(file: MulterFile[]) {
-        console.log('file memory => ');
-        console.dir(file);
-        this.fileService.uploadFileMemory('post', file, 'tyche0322')
-    }
 }

@@ -1,28 +1,16 @@
-import {
-    Controller,
-    Delete,
-    Get,
-    Param,
-    ParseIntPipe,
-    Patch,
-    Post,
-    Query,
-    UploadedFile,
-    UploadedFiles,
-    UseGuards,
-    UseInterceptors
+import {Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UploadedFiles, UseGuards, UseInterceptors
 } from '@nestjs/common';
 import { PostService } from './post.service';
 import {BearerTokenGuard} from "../auth/guard/bearer-token.guard";
 import {User} from "../users/decorator/user.decorator";
 import {UsersEntity} from "../users/entities/users.entity";
 import {PaginatePostDto} from "./dto/paginate-post.dto";
-import {FileInterceptor, FilesInterceptor} from "@nestjs/platform-express";
+import {FilesInterceptor} from "@nestjs/platform-express";
 import type {MulterFile} from "../../common/type/common.type";
 import {MemoryFileUploadConfig} from "../../config/file/memory-file-upload.config";
+import {CreatePostDto} from "./dto/create-post.dto";
 
-const MemoryFileUpload = MemoryFileUploadConfig();
-
+@UseGuards(BearerTokenGuard)
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}
@@ -51,20 +39,24 @@ export class PostController {
         return this.postService.getOwnerPost(user);
     }
 
-    @Post('upload')
-    @UseInterceptors(FileInterceptor('file')) // HTML form의 <input type="file" name="file" /> 에서 name 속성과 일치해야 함
-    uploadPost(
-        @UploadedFile() file: MulterFile,
+    @Post('upload/disk')
+    @UseInterceptors(FilesInterceptor('files')) // HTML form의 <input type="file" name="file" /> 에서 name 속성과 일치해야 함
+    uploadBFileDiskPost(
+        @Body() post: CreatePostDto,
+        @User() userReq: Pick<UsersEntity, 'email' | 'id'>,
+        @UploadedFiles() files: MulterFile[]
     ){
-        return this.postService.uploadPost(file);
+        return this.postService.uploadBFileDiskPost(post, userReq, files);
     }
 
-    @Post('upload/small')
-    @UseInterceptors(FilesInterceptor('file', Infinity, MemoryFileUploadConfig())) // HTML form의 <input type="file" name="file" /> 에서 name 속성과 일치해야 함
-    uploadSmallFilePost(
-        @UploadedFiles() file: MulterFile[],
+    @Post('upload/memory')
+    @UseInterceptors(FilesInterceptor('files', Infinity, MemoryFileUploadConfig())) // HTML form의 <input type="file" name="file" /> 에서 name 속성과 일치해야 함
+    uploadFileMemoryPost(
+        @Body() post: CreatePostDto,
+        @User() userReq: Pick<UsersEntity, 'email' | 'id'>,
+        @UploadedFiles() files: MulterFile[]
     ){
-        return this.postService.uploadSmallFilePost(file);
+        return this.postService.uploadFileMemoryPost(post, userReq, files);
     }
 
     @Patch('update/:uid')

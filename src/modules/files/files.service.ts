@@ -1,6 +1,6 @@
 import {Injectable, UnauthorizedException} from '@nestjs/common';
 import {InjectRepository} from "@nestjs/typeorm";
-import {BaseEntity, Repository} from "typeorm";
+import {Repository} from "typeorm";
 import {FilesEntity} from "./entities/files.entity";
 import type {MulterFile} from "../../common/type/common.type";
 import {dirname, extname, join} from 'path';
@@ -11,7 +11,8 @@ import sharp from "sharp";
 import {mkdirSync} from "node:fs";
 import {ConfigService} from "@nestjs/config";
 import {v4 as uuid} from "uuid";
-import {mkdir, unlink, writeFile} from "node:fs/promises";
+import {unlink, writeFile} from "node:fs/promises";
+import {BaseEntity} from "../../common/entities/base.entity";
 
 @Injectable()
 export class FilesService {
@@ -23,34 +24,61 @@ export class FilesService {
         private readonly configService: ConfigService,
     ) {}
 
-    async uploadBFileDisk<T extends BaseEntity>(file: MulterFile, userId: string, entity?: T) {
+    async uploadBFileDisk<T extends BaseEntity>(files: MulterFile[], userId: string, options: { entity?: T; type: string }) {
+        if(files.length < 1) return {
+            success : true,
+            message : '파일할 파일 없음',
+            count : 0,
+        };
+
+        const savedFiles: string[] = [];
         try{
             const uploadUser = await this.usersRepository.findOne({where: {id: userId}});
             if(!uploadUser) throw new UnauthorizedException('파일은 유효한 사용자만 업로드 할 수 있습니다.');
 
-            const uploadFile = new CreateFileDto();
-            uploadFile.originalName = file.originalname;
-            uploadFile.storedName = file.filename;
-            uploadFile.mimetype = file.mimetype;
-            uploadFile.path = dirname(file.path);
-            uploadFile.size = file.size;
-            uploadFile.extension = extname(file.filename);
-            uploadFile.uploadedBy = uploadUser;
+            const results = await Promise.allSettled(files.map(async(file) => {
+                const uploadFile = new CreateFileDto();
+                uploadFile.originalName = file.originalname;
+                uploadFile.storedName = file.filename;
+                uploadFile.mimetype = file.mimetype;
+                uploadFile.path = dirname(file.path);
+                uploadFile.size = file.size;
+                uploadFile.extension = extname(file.filename);
+                uploadFile.uploadedBy = uploadUser;
 
-            if (entity && entity instanceof PostEntity) {
-                uploadFile.post = entity;
-            }
+                if (options.entity && options.type === 'PostEntity') {
+                    uploadFile.post = options.entity as unknown as PostEntity;
+                }
 
-            const createFile = this.fileRepository.create(uploadFile);
-            return await this.fileRepository.save(createFile);
+                savedFiles.push(file.path);
+
+                const createFile = this.fileRepository.create(uploadFile);
+                return await this.fileRepository.save(createFile);
+            }));
+            return {
+                success : results.every(value => value.status === 'fulfilled'),
+                message : '파일 업로드 완료',
+                count : files.length,
+            };
         }catch (error){
-            throw error;
+            // 실패 시 저장된 파일 모두 삭제
+            await Promise.allSettled(savedFiles.map(path => unlink(path)));
+            return {
+                success : false,
+                message : error.message,
+                count : files.length,
+            };
         }
     }
 
-    async uploadFileMemory<T extends BaseEntity>(saveLocation: string, files: MulterFile[], userId: string, entity?: T){
-        const savedFiles: string[] = [];
+    async uploadFileMemory<T extends BaseEntity>(saveLocation: string, files: MulterFile[], userId: string, options: { entity?: T; type: string }){
+        if(files.length < 1) return {
+            success : true,
+            message : '파일할 파일 없음',
+            count : 0,
+        };
 
+        const savedFiles: string[] = [];
         try{
             const uploadUser = await this.usersRepository.findOne({where: {id: userId}});
             if(!uploadUser) throw new UnauthorizedException('파일은 유효한 사용자만 업로드 할 수 있습니다.');
@@ -96,19 +124,27 @@ export class FilesService {
                     uploadFile.thumbnail = join(uploadPath, 'thumbnail', `${uuid()}.webp`);
                 }
 
-                if (entity && entity instanceof PostEntity) {
-                    uploadFile.post = entity;
+                if (options.entity && options.type === 'PostEntity') {
+                    uploadFile.post = options.entity as unknown as PostEntity;
                 }
 
                 const createFile = this.fileRepository.create(uploadFile);
                 return await this.fileRepository.save(createFile);
             }));
 
-            return { success : results.every(value => value.status === 'fulfilled')};
+            return {
+                success : results.every(value => value.status === 'fulfilled'),
+                message : '파일 업로드 완료',
+                count : files.length,
+            };
         }catch(error){
             // 실패 시 저장된 파일 모두 삭제
             await Promise.allSettled(savedFiles.map(path => unlink(path)));
-            throw error;
+            return {
+                success : false,
+                message : error.message,
+                count : files.length,
+            };
         }
     }
 
