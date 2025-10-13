@@ -7,6 +7,7 @@ import {MulterModule} from "@nestjs/platform-express";
 import {DiskFileUploadConfig} from "../../config/file/disk-file-upload.config";
 import {UsersModule} from "../users/users.module";
 import {UsersEntity} from "../users/entities/users.entity";
+import {AuthModule} from "../auth/auth.module";
 
 @Module({
     imports: [
@@ -16,6 +17,7 @@ import {UsersEntity} from "../users/entities/users.entity";
         ]),
         MulterModule.registerAsync(DiskFileUploadConfig('files')),
         UsersModule,
+        AuthModule
     ],
     exports: [FilesService],
     controllers: [FilesController],

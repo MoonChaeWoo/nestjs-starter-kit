@@ -1,4 +1,4 @@
-import {Injectable, UnauthorizedException} from '@nestjs/common';
+import {BadRequestException, Injectable, UnauthorizedException} from '@nestjs/common';
 import {InjectRepository} from "@nestjs/typeorm";
 import {Repository} from "typeorm";
 import {FilesEntity} from "./entities/files.entity";
@@ -13,6 +13,7 @@ import {ConfigService} from "@nestjs/config";
 import {v4 as uuid} from "uuid";
 import {unlink, writeFile} from "node:fs/promises";
 import {BaseEntity} from "../../common/entities/base.entity";
+import {plainToInstance} from "class-transformer";
 
 @Injectable()
 export class FilesService {
@@ -24,7 +25,29 @@ export class FilesService {
         private readonly configService: ConfigService,
     ) {}
 
-    async uploadBFileDisk<T extends BaseEntity>(files: MulterFile[], userId: string, options: { entity?: T; type: string }) {
+    async getFileUrl(fileUuid: string) {
+        try{
+            const file = await this.fileRepository.findOne({
+                where : {
+                    storedName: fileUuid,
+                }
+            });
+            if(!file) throw new BadRequestException('해당 파일을 찾을 수 없습니다. 파일명이나 파일 경로가 정확한지 다시 한번 확인하세요.');
+
+            const transformed = plainToInstance(FilesEntity, file, {
+                excludeExtraneousValues: false,
+            });
+
+            return {
+                success: true,
+                url : transformed.url,
+            };
+        }catch(error){
+            throw error;
+        }
+    }
+
+    async uploadBFileDisk<T extends BaseEntity>(files: MulterFile[], userId: string, options?: { entity?: T; type: string }) {
         if(files.length < 1) return {
             success : true,
             message : '파일할 파일 없음',
@@ -47,7 +70,7 @@ export class FilesService {
                 uploadFile.extension = extname(file.filename);
                 uploadFile.uploadedBy = uploadUser;
 
-                if (options.entity && options.type === 'PostEntity') {
+                if (options && options.entity && options.type === 'PostEntity') {
                     uploadFile.post = options.entity as unknown as PostEntity;
                 }
 
@@ -72,7 +95,7 @@ export class FilesService {
         }
     }
 
-    async uploadFileMemory<T extends BaseEntity>(saveLocation: string, files: MulterFile[], userId: string, options: { entity?: T; type: string }){
+    async uploadFileMemory<T extends BaseEntity>(saveLocation: string, files: MulterFile[], userId: string, options?: { entity?: T; type: string }){
         if(files.length < 1) return {
             success : true,
             message : '파일할 파일 없음',
@@ -130,7 +153,7 @@ export class FilesService {
                     uploadFile.thumbnail = join(uploadPath, 'thumbnail', `${uuid()}.webp`);
                 }
 
-                if (options.entity && options.type === 'PostEntity') {
+                if (options && options.entity && options.type === 'PostEntity') {
                     uploadFile.post = options.entity as unknown as PostEntity;
                 }
 
@@ -165,5 +188,6 @@ export class FilesService {
     deleteFile(id:number){
 
     }
+
 
 }

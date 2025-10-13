@@ -1,8 +1,8 @@
-import {Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
+import {Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn} from "typeorm";
 import {BaseEntity} from "../../../common/entities/base.entity";
 import {UsersEntity} from "../../users/entities/users.entity";
 import {PostEntity} from "../../post/entities/post.entity";
-import {Transform} from "class-transformer";
+import {Exclude, Transform} from "class-transformer";
 import {join} from "path";
 
 @Entity('files')
@@ -25,6 +25,7 @@ export class FilesEntity extends BaseEntity {
     @Column({
         comment: '실제 파일 저장 경로',
     })
+    @Exclude()
     path: string;
 
     @Column({
