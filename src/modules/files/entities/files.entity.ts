@@ -21,9 +21,14 @@ export class FilesEntity extends BaseEntity {
     storedName: string;
 
     @Column({
-        comment: '파일 저장 경로',
+        comment: '실제 파일 저장 경로',
     })
     path: string;
+
+    @Column({
+        comment: '요청 경로',
+    })
+    url: string;
 
     @Column({
         comment: '파일 확장자 (예: jpg, png)',

@@ -12,9 +12,13 @@ export class CreateFileDto {
     @IsString({ message: 'storedName은 문자열이어야 합니다.' })
     storedName: string;
 
-    @ApiProperty({ example: '/uploads/2025/10/', description: '파일 저장 경로' })
+    @ApiProperty({ example: '/Desktop/portfolio/backend/nestjs-starter-kit/uploads/2025/10/', description: '파일 저장 경로' })
     @IsString({ message: 'path는 문자열이어야 합니다.' })
     path: string;
+
+    @ApiProperty({ example: '/uploads/2025/10/', description: '파일 저장 경로' })
+    @IsString({ message: 'path는 문자열이어야 합니다.' })
+    url: string;
 
     @ApiProperty({ example: 'jpg', description: '파일 확장자' })
     @IsString({ message: 'extension은 문자열이어야 합니다.' })

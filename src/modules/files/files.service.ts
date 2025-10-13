@@ -42,6 +42,9 @@ export class FilesService {
                 uploadFile.storedName = file.filename;
                 uploadFile.mimetype = file.mimetype;
                 uploadFile.path = dirname(file.path);
+                uploadFile.url = join(
+                    this.configService.get<string>('FILE_DOWNLOAD_URL_PREFIX') || 'upload',
+                    file.path.slice(file.path.indexOf('/upload') + 7));
                 uploadFile.size = file.size;
                 uploadFile.extension = extname(file.filename);
                 uploadFile.uploadedBy = uploadUser;
@@ -105,9 +108,15 @@ export class FilesService {
                 uploadFile.uploadedBy = uploadUser;
 
                 // 원본 파일 저장
-                await writeFile(join(uploadPath, `${uuid()}${extname(file.originalname)}`), file.buffer);
-                uploadFile.storedName = join(uploadPath, `${uuid()}${extname(file.originalname)}`);
+                const fileName = `${uuid()}${extname(file.originalname)}`;
+                await writeFile(join(uploadPath, fileName), file.buffer);
+                uploadFile.storedName = fileName;
                 uploadFile.path = uploadPath;
+                uploadFile.url = join(
+                    this.configService.get<string>('FILE_DOWNLOAD_URL_PREFIX') || 'upload',
+                    uploadPath.slice(uploadPath.indexOf('/upload') + 7),
+                    fileName
+                );
                 savedFiles.push(`${uuid()}${extname(file.originalname)}`);
 
                 // 썸네일 저장 (썸네일 생성 가능한 파일만)

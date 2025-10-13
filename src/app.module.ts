@@ -19,6 +19,8 @@ import { MailModule } from './modules/mail/mail.module';
 import {ScheduleModule} from "@nestjs/schedule";
 import {APP_INTERCEPTOR} from "@nestjs/core";
 import { SchedulerModule } from './modules/scheduler/scheduler.module';
+import {ServeStaticModule} from "@nestjs/serve-static";
+import {DownloadFileMainConfigAsync} from "./config/file/download-file.config";
 
 @Module({
     imports: [
@@ -29,6 +31,7 @@ import { SchedulerModule } from './modules/scheduler/scheduler.module';
         TypeOrmModule.forRootAsync(mainDatabaseConfig),
         MailerModule.forRootAsync(GoogleMailConfig),
         ScheduleModule.forRoot(),
+        ServeStaticModule.forRootAsync(DownloadFileMainConfigAsync),
         UsersModule,
         PostModule,
         AuthModule,
