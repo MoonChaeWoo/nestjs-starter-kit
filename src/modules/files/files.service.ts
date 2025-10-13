@@ -42,9 +42,7 @@ export class FilesService {
                 uploadFile.storedName = file.filename;
                 uploadFile.mimetype = file.mimetype;
                 uploadFile.path = dirname(file.path);
-                uploadFile.url = join(
-                    this.configService.get<string>('FILE_DOWNLOAD_URL_PREFIX') || 'upload',
-                    file.path.slice(file.path.indexOf('/upload') + 7));
+                uploadFile.url = file.path.slice(file.path.indexOf('/upload') + 7);
                 uploadFile.size = file.size;
                 uploadFile.extension = extname(file.filename);
                 uploadFile.uploadedBy = uploadUser;
@@ -113,7 +111,6 @@ export class FilesService {
                 uploadFile.storedName = fileName;
                 uploadFile.path = uploadPath;
                 uploadFile.url = join(
-                    this.configService.get<string>('FILE_DOWNLOAD_URL_PREFIX') || 'upload',
                     uploadPath.slice(uploadPath.indexOf('/upload') + 7),
                     fileName
                 );

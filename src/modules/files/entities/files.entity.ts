@@ -2,6 +2,8 @@ import {Column, Entity, JoinColumn, JoinTable, ManyToMany, ManyToOne, PrimaryGen
 import {BaseEntity} from "../../../common/entities/base.entity";
 import {UsersEntity} from "../../users/entities/users.entity";
 import {PostEntity} from "../../post/entities/post.entity";
+import {Transform} from "class-transformer";
+import {join} from "path";
 
 @Entity('files')
 export class FilesEntity extends BaseEntity {
@@ -28,6 +30,7 @@ export class FilesEntity extends BaseEntity {
     @Column({
         comment: '요청 경로',
     })
+    @Transform(({value}) => value && join(process.env.FILE_DOWNLOAD_URL_PREFIX || 'upload', value))
     url: string;
 
     @Column({
