@@ -87,6 +87,7 @@ export class FilesService {
             return {
                 success : results.every(value => value.status === 'fulfilled'),
                 message : '파일 업로드 완료',
+                uuids : results.map(value => value.status === "fulfilled" && value.value.uuid),
                 count : files.length,
             };
         }catch (error){
@@ -173,6 +174,7 @@ export class FilesService {
             return {
                 success : results.every(value => value.status === 'fulfilled'),
                 message : '파일 업로드 완료',
+                uuids : results.map(value => value.status === "fulfilled" && value.value.uuid),
                 count : files.length,
             };
         }catch(error){
