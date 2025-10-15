@@ -9,9 +9,10 @@ import type {MulterFile} from "../../common/type/common.type";
 import {MemoryFileUploadConfig} from "../../config/file/memory-file-upload.config";
 import {CreatePostDto} from "./dto/create-post.dto";
 import type {USER_REQ} from "../auth/type/auth.type";
-import {ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse} from "@nestjs/swagger";
+import {ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags} from "@nestjs/swagger";
 
 @UseGuards(BearerTokenGuard)
+@ApiTags('Post - 게시글 관리 & 등록')
 @Controller('post')
 export class PostController {
   constructor(private readonly postService: PostService) {}

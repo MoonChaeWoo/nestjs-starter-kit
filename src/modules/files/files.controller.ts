@@ -5,10 +5,11 @@ import {BearerTokenGuard} from "../auth/guard/bearer-token.guard";
 import {User} from "../users/decorator/user.decorator";
 import {MemoryFileUploadConfig} from "../../config/file/memory-file-upload.config";
 import type {MulterFile} from "../../common/type/common.type";
-import {ApiConsumes, ApiOperation, ApiQuery, ApiResponse} from "@nestjs/swagger";
+import {ApiConsumes, ApiOperation, ApiQuery, ApiResponse, ApiTags} from "@nestjs/swagger";
 import type {USER_REQ} from "../auth/type/auth.type";
 
 @UseGuards(BearerTokenGuard)
+@ApiTags('Files - 파일 관리 및 등록(파일 선 등록 패턴으로 활용도 가능)')
 @Controller('files')
 export class FilesController {
     constructor(private readonly filesService: FilesService) {}
