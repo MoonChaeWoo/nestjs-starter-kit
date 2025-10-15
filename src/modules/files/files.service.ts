@@ -14,6 +14,7 @@ import {v4 as uuid} from "uuid";
 import {unlink, writeFile} from "node:fs/promises";
 import {BaseEntity} from "../../common/entities/base.entity";
 import {plainToInstance} from "class-transformer";
+import type {USER_REQ} from "../auth/type/auth.type";
 
 @Injectable()
 export class FilesService {
@@ -47,7 +48,7 @@ export class FilesService {
         }
     }
 
-    async uploadBFileDisk<T extends BaseEntity>(files: MulterFile[], userId: string, options?: { entity?: T; type: string }) {
+    async uploadBFileDisk<T extends BaseEntity>(files: MulterFile[], user: USER_REQ, options?: { entity?: T; type: string }) {
         if(files.length < 1) return {
             success : true,
             message : '파일할 파일 없음',
@@ -56,7 +57,11 @@ export class FilesService {
 
         const savedFiles: string[] = [];
         try{
-            const uploadUser = await this.usersRepository.findOne({where: {id: userId}});
+            const uploadUser = await this.usersRepository.findOne({where: {
+                uid: user.uid,
+                id: user.id,
+                email: user.email,
+            }});
             if(!uploadUser) throw new UnauthorizedException('파일은 유효한 사용자만 업로드 할 수 있습니다.');
 
             const results = await Promise.allSettled(files.map(async(file) => {
@@ -95,7 +100,7 @@ export class FilesService {
         }
     }
 
-    async uploadFileMemory<T extends BaseEntity>(saveLocation: string, files: MulterFile[], userId: string, options?: { entity?: T; type: string }){
+    async uploadFileMemory<T extends BaseEntity>(saveLocation: string, files: MulterFile[], user: USER_REQ, options?: { entity?: T; type: string }){
         if(files.length < 1) return {
             success : true,
             message : '파일할 파일 없음',
@@ -104,7 +109,11 @@ export class FilesService {
 
         const savedFiles: string[] = [];
         try{
-            const uploadUser = await this.usersRepository.findOne({where: {id: userId}});
+            const uploadUser = await this.usersRepository.findOne({where: {
+                uid: user.uid,
+                id: user.id,
+                email: user.email,
+            }});
             if(!uploadUser) throw new UnauthorizedException('파일은 유효한 사용자만 업로드 할 수 있습니다.');
 
             const today = new Date();

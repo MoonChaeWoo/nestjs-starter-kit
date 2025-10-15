@@ -26,6 +26,7 @@ import {BearerTokenGuard} from "./guard/bearer-token.guard";
 import {User} from "../users/decorator/user.decorator";
 import {AuthenticateDto} from "./dto/authenticate-auth.dto";
 import {LoginAuthDto} from "./dto/login-auth.dto";
+import type {USER_REQ} from "./type/auth.type";
 
 @ApiTags('Auth - 인증 관리')
 @Controller('auth')
@@ -299,7 +300,7 @@ export class AuthController {
     @ApiParam({ name: 'uid', description: '삭제 대상 회원 UID', example: 1 })
     @ApiResponse({ status: 200, description: '탈퇴 완료, 성공 여부 반환', type: Object })
     deleteUser(
-        @User() userReq: Pick<UsersEntity, 'email' | 'id'>,
+        @User() userReq: USER_REQ,
         @Param('uid', ParseIntPipe) uid: number,
     ){
         return this.authService.deleteUser(userReq, uid);

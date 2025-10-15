@@ -3,12 +3,12 @@ import {Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, 
 import { PostService } from './post.service';
 import {BearerTokenGuard} from "../auth/guard/bearer-token.guard";
 import {User} from "../users/decorator/user.decorator";
-import {UsersEntity} from "../users/entities/users.entity";
 import {PaginatePostDto} from "./dto/paginate-post.dto";
 import {FilesInterceptor} from "@nestjs/platform-express";
 import type {MulterFile} from "../../common/type/common.type";
 import {MemoryFileUploadConfig} from "../../config/file/memory-file-upload.config";
 import {CreatePostDto} from "./dto/create-post.dto";
+import type {USER_REQ} from "../auth/type/auth.type";
 
 @UseGuards(BearerTokenGuard)
 @Controller('post')
@@ -34,7 +34,7 @@ export class PostController {
     @Get('owner')
     @UseGuards(BearerTokenGuard)
     getOwnerPost(
-        @User() user: Pick<UsersEntity, 'email' | 'id'>,
+        @User() user: USER_REQ,
     ){
         return this.postService.getOwnerPost(user);
     }
@@ -43,7 +43,7 @@ export class PostController {
     @UseInterceptors(FilesInterceptor('files')) // HTML form의 <input type="file" name="file" /> 에서 name 속성과 일치해야 함
     uploadBFileDiskPost(
         @Body() post: CreatePostDto,
-        @User() userReq: Pick<UsersEntity, 'email' | 'id'>,
+        @User() userReq: USER_REQ,
         @UploadedFiles() files: MulterFile[]
     ){
         return this.postService.uploadBFileDiskPost(post, userReq, files);
@@ -53,7 +53,7 @@ export class PostController {
     @UseInterceptors(FilesInterceptor('files', Infinity, MemoryFileUploadConfig())) // HTML form의 <input type="file" name="file" /> 에서 name 속성과 일치해야 함
     uploadFileMemoryPost(
         @Body() post: CreatePostDto,
-        @User() userReq: Pick<UsersEntity, 'email' | 'id'>,
+        @User() userReq: USER_REQ,
         @UploadedFiles() files: MulterFile[]
     ){
         return this.postService.uploadFileMemoryPost(post, userReq, files);

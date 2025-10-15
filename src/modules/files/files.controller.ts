@@ -3,10 +3,10 @@ import { FilesService } from './files.service';
 import { FilesInterceptor} from "@nestjs/platform-express";
 import {BearerTokenGuard} from "../auth/guard/bearer-token.guard";
 import {User} from "../users/decorator/user.decorator";
-import {UsersEntity} from "../users/entities/users.entity";
 import {MemoryFileUploadConfig} from "../../config/file/memory-file-upload.config";
 import type {MulterFile} from "../../common/type/common.type";
-import {ApiBody, ApiConsumes, ApiOperation, ApiQuery, ApiResponse} from "@nestjs/swagger";
+import {ApiConsumes, ApiOperation, ApiQuery, ApiResponse} from "@nestjs/swagger";
+import type {USER_REQ} from "../auth/type/auth.type";
 
 @UseGuards(BearerTokenGuard)
 @Controller('files')
@@ -61,9 +61,9 @@ export class FilesController {
     @UseInterceptors(FilesInterceptor('files'))
     uploadBFileDisk(
         @UploadedFiles() files: MulterFile[],
-        @User() user: Pick<UsersEntity, 'email' | 'id'>
+        @User() user: USER_REQ
     ){
-        return this.filesService.uploadBFileDisk(files, user.id);
+        return this.filesService.uploadBFileDisk(files, user);
     }
 
     /**
@@ -89,8 +89,8 @@ export class FilesController {
     @UseInterceptors(FilesInterceptor('files', Infinity, MemoryFileUploadConfig()))
     uploadFileMemory(
         @UploadedFiles() files: MulterFile[],
-        @User() user: Pick<UsersEntity, 'email' | 'id'>
+        @User() user: USER_REQ
     ){
-        return this.filesService.uploadFileMemory('files', files, user.id);
+        return this.filesService.uploadFileMemory('files', files, user);
     }
 }

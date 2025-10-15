@@ -7,6 +7,7 @@ import {DeleteResult, UpdateResult} from "typeorm";
 import {ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags} from "@nestjs/swagger";
 import {BearerTokenGuard} from "../auth/guard/bearer-token.guard";
 import {User} from "./decorator/user.decorator";
+import type {USER_REQ} from "../auth/type/auth.type";
 
 @ApiTags('Users - 사용자 관리')
 @Controller('users')
@@ -23,7 +24,7 @@ export class UsersController {
     @ApiOperation({ summary: '모든 사용자 조회', description: 'DB에 저장된 모든 사용자 목록을 반환합니다.' })
     @ApiResponse({ status: 200, description: '회원 목록 반환', type: [UsersEntity] })
     getAllUser(
-        @User() userReq: Pick<UsersEntity, 'email' | 'id'>,
+        @User() userReq: USER_REQ,
     ): Promise<UsersEntity[]>{
         return this.usersService.getAllUsers(userReq);
     }
@@ -46,7 +47,7 @@ export class UsersController {
     @ApiQuery({ name: 'id', required: false, example: 'user123', description: '회원 아이디' })
     @ApiResponse({ status: 200, description: '검색된 회원 반환', type: UsersEntity })
     findUser(
-        @Query() user: Partial<Pick<UsersEntity, 'uid' | 'email' | 'id'>>,
+        @Query() user: Partial<USER_REQ>,
     ): Promise<UsersEntity | {}>{
         return this.usersService.findUser(user);
     }
@@ -115,7 +116,7 @@ export class UsersController {
     @ApiParam({ name: 'uid', description: '삭제 대상 회원 UID', example: 1 })
     @ApiResponse({ status: 200, description: '회원 소프트 삭제 완료', type: UpdateResult })
     softDelete(
-        @User() userReq: Pick<UsersEntity, 'email' | 'id'>,
+        @User() userReq: USER_REQ,
         @Param('uid', ParseIntPipe) uid: number
     ): Promise<UpdateResult> {
         return this.usersService.softDeleteUser(userReq, uid);
@@ -138,7 +139,7 @@ export class UsersController {
     @ApiParam({ name: 'uid', description: '삭제 대상 회원 UID', example: 1 })
     @ApiResponse({ status: 200, description: '회원 하드 삭제 완료', type: DeleteResult })
     hardDelete(
-        @User() userReq: Pick<UsersEntity, 'email' | 'id'>,
+        @User() userReq: USER_REQ,
         @Param('uid', ParseIntPipe) uid: number
     ): Promise<DeleteResult> {
         return this.usersService.hardDeleteUser(userReq, uid);

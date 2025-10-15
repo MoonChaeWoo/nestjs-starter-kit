@@ -101,10 +101,11 @@ export class AuthService implements OnModuleInit{
      * @param isRefreshToken true면 리프레시 토큰, false면 액세스 토큰
      * @returns 생성된 JWT 문자열
      */
-    generateToken(user: Pick<UsersEntity, 'email' | 'id'>, isRefreshToken : boolean): string {
+    generateToken(user: Pick<UsersEntity, 'email' | 'id' | 'uid'>, isRefreshToken : boolean): string {
         const payload = {
             email: user.email,
             id: user.id,
+            uid: user.uid,
             token : isRefreshToken,
         };
 

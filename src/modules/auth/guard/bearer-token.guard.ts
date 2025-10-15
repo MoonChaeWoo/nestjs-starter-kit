@@ -85,6 +85,7 @@ export class BearerTokenGuard implements CanActivate {
                 tokenCheckResult = accessToken.pass;
             }
 
+            req.uid = accessToken.payload.uid;
             req.id = accessToken.payload.id;
             req.email = accessToken.payload.email;
 

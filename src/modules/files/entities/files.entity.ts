@@ -57,9 +57,9 @@ export class FilesEntity extends BaseEntity {
 
     @ManyToOne(() => PostEntity, post => post.files)
     @JoinColumn()
-    post: PostEntity;
+    post: PostEntity | number;
 
     @ManyToOne(() => UsersEntity, users => users.files, { nullable: false, eager: true })
     @JoinColumn()
-    uploadedBy: UsersEntity;
+    uploadedBy: UsersEntity | number;
 }

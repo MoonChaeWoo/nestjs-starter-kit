@@ -8,6 +8,7 @@ import {ScrollPagination} from "../../common/utils/paginate/scroll-pagination.ut
 import type {MulterFile} from "../../common/type/common.type";
 import {FilesService} from "../files/files.service";
 import {CreatePostDto} from "./dto/create-post.dto";
+import type {USER_REQ} from "../auth/type/auth.type";
 
 @Injectable()
 export class PostService {
@@ -39,9 +40,10 @@ export class PostService {
         return targetPost;
     }
 
-    async getOwnerPost(user: Pick<UsersEntity, "email" | "id">) {
+    async getOwnerPost(user: USER_REQ) {
         const owner = await this.usersRepository.findOne({
             where: {
+                uid: user.uid,
                 id : user.id,
                 email : user.email
             }
@@ -56,7 +58,7 @@ export class PostService {
         });
     }
 
-    async uploadBFileDiskPost(post: CreatePostDto, userReq: Pick<UsersEntity, 'email' | 'id'>, files : MulterFile[]) {
+    async uploadBFileDiskPost(post: CreatePostDto, userReq: USER_REQ, files : MulterFile[]) {
         try{
             const user = await this.usersRepository.findOne({where: {id : userReq.id}});
             if(!user) throw new UnauthorizedException('유효하지 않은 사용자입니다.');
@@ -64,7 +66,7 @@ export class PostService {
             const postSave = await this.postRepository.save({...postCreate, author : user});
 
             const {success, message, count} = await this.fileService.uploadBFileDisk(
-                files, userReq.id, {entity: postSave, type : 'PostEntity'}
+                files, userReq, {entity: postSave, type : 'PostEntity'}
             );
             if(!success){
                 throw new InternalServerErrorException('file upload error => ', message);
@@ -80,7 +82,7 @@ export class PostService {
         }
     }
 
-    async uploadFileMemoryPost(post: CreatePostDto, userReq: Pick<UsersEntity, 'email' | 'id'>, file: MulterFile[]) {
+    async uploadFileMemoryPost(post: CreatePostDto, userReq: USER_REQ, file: MulterFile[]) {
         try{
             const user = await this.usersRepository.findOne({where: {id : userReq.id}});
             if(!user) throw new UnauthorizedException('유효하지 않은 사용자입니다.');
@@ -88,7 +90,7 @@ export class PostService {
             const postSave = await this.postRepository.save({...postCreate, author : user});
 
             const {success, message, count} = await this.fileService.uploadFileMemory(
-                'post', file, userReq.id, {entity: postSave, type : 'PostEntity'}
+                'post', file, userReq, {entity: postSave, type : 'PostEntity'}
             );
             if(!success){
                 throw new InternalServerErrorException('file upload error => ', message);

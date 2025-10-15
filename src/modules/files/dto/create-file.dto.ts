@@ -1,4 +1,4 @@
-import {ApiProperty, ApiPropertyOptional} from "@nestjs/swagger";
+import {ApiProperty, ApiPropertyOptional, getSchemaPath} from "@nestjs/swagger";
 import {IsArray, IsNumber, IsOptional, IsString, IsUUID, ValidateNested} from "class-validator";
 import {UsersEntity} from "../../users/entities/users.entity";
 import {PostEntity} from "../../post/entities/post.entity";
@@ -36,11 +36,25 @@ export class CreateFileDto {
     @IsString({ message: 'mimeType은 문자열이어야 합니다.' })
     mimetype: string;
 
-    @ApiProperty({ type: PostEntity, description: '게시글 엔티티' })
+    @ApiProperty(
+        {
+            description: '게시글 엔티티',
+            oneOf: [
+                { $ref: getSchemaPath(PostEntity) }, // 엔티티로 보낼 수도 있고
+                { type: 'number' },                  // ID로 보낼 수도 있음
+            ]
+        })
     @ValidateNested()
-    post?: PostEntity;
+    post?: PostEntity | number;
 
-    @ApiProperty({ type: UsersEntity, description: '사용자 엔티티' })
+    @ApiProperty(
+        {
+            description: '사용자 엔티티',
+            oneOf: [
+                { $ref: getSchemaPath(UsersEntity) }, // 엔티티로 보낼 수도 있고
+                { type: 'number' },                  // ID로 보낼 수도 있음
+            ]
+        })
     @ValidateNested()
-    uploadedBy: UsersEntity;
+    uploadedBy: UsersEntity | number;
 }
