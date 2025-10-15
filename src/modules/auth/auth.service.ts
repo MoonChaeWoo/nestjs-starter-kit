@@ -9,7 +9,7 @@ import {
 import {MailerService} from "@nestjs-modules/mailer";
 import {MailResponseType, SendMailType} from "../mail/types/mail-types.type";
 import {AuthEmailContext, TokenType, VerificationData} from "./interface/auth.interface";
-import {checkExpiredToken, checkExpiresAt, createContext} from "./utils/auth.utils";
+import {checkExpiredToken, checkExpiresAt, checkUserEntity, createContext} from "./utils/auth.utils";
 import {CronExpression, SchedulerRegistry} from "@nestjs/schedule";
 import {ConfigService} from "@nestjs/config";
 import {CronJob} from "cron";
@@ -281,7 +281,7 @@ export class AuthService implements OnModuleInit{
             if(!(user.email || user.id)) throw new Error('Email 또는 Id 둘중 하나는 필수 입력입니다.');
 
             const targetUser: {} | UsersEntity = await this.usersService.findUser(user);
-            if(!('uid' in targetUser)) throw new UnauthorizedException('존재하지 않는 회원입니다.');
+            if(!checkUserEntity(targetUser)) throw new UnauthorizedException('존재하지 않는 회원입니다.');
 
             const authResult: boolean = await bcrypt.compare(user.password, targetUser.password);
             if(!authResult) throw new UnauthorizedException('회원 정보가 일치하지 않습니다.');

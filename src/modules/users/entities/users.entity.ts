@@ -21,12 +21,10 @@ export class UsersEntity extends BaseEntity {
     @PrimaryGeneratedColumn({
         comment: '사용자 고유 식별자 (자동 증가 PK)',
     })
-    @Expose()
     @ApiProperty({ example: 1, description: '사용자 고유 식별자 (자동 증가 PK)' })
     uid: number;
 
     @ManyToMany(() => GroupEntity, (group) => group.users)
-    @Expose()
     @ApiProperty({ type: () => [GroupEntity], description: '사용자가 속한 그룹 목록' })
     group: GroupEntity[];
 
@@ -59,9 +57,8 @@ export class UsersEntity extends BaseEntity {
     @Column({
         comment: '비밀번호 (해시된 문자열)',
     })
-    password: string; // 노출 X
+    password: string;
 
-    @Expose()
     @ApiProperty({ enum: UserRoleEnum, example: UserRoleEnum.USER, description: '사용자 유형' })
     @Column({
         type: 'enum',
@@ -71,7 +68,6 @@ export class UsersEntity extends BaseEntity {
     })
     role: UserRoleEnum;
 
-    @Expose()
     @ApiProperty({ example: true, description: '계정 활성화 여부 (true: 활성, false: 비활성)' })
     @Column({
         default: true,
@@ -79,7 +75,6 @@ export class UsersEntity extends BaseEntity {
     })
     isActive?: boolean = true;
 
-    @Expose()
     @ApiProperty({ example: 1, description: '버전 관리용 컬럼 (낙관적 락)' })
     @VersionColumn({
         comment: '버전 관리용 컬럼 (낙관적 락)',
@@ -87,12 +82,10 @@ export class UsersEntity extends BaseEntity {
     version: number;
 
     @OneToMany(() => PostEntity, (posts) => posts.author, { cascade: ['insert', 'update'] })
-    @Expose()
     @ApiProperty({ type: () => [PostEntity], description: '작성한 게시글 목록' })
     posts: PostEntity[];
 
     @OneToMany(() => FilesEntity, (files) => files.uploadedBy, { cascade: true })
-    @Expose()
     @ApiProperty({ type: () => [FilesEntity], description: '업로드한 파일 목록' })
     files: FilesEntity[];
 

@@ -8,6 +8,7 @@ import {ApiBody, ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags} from "@
 import {BearerTokenGuard} from "../auth/guard/bearer-token.guard";
 import {User} from "./decorator/user.decorator";
 import type {USER_REQ} from "../auth/type/auth.type";
+import {AdminUserDto} from "./dto/admin-user.dto";
 
 @ApiTags('Users - 사용자 관리')
 @Controller('users')
@@ -22,10 +23,10 @@ export class UsersController {
     @Get()
     @UseGuards(BearerTokenGuard)
     @ApiOperation({ summary: '모든 사용자 조회', description: 'DB에 저장된 모든 사용자 목록을 반환합니다.' })
-    @ApiResponse({ status: 200, description: '회원 목록 반환', type: [UsersEntity] })
+    @ApiResponse({ status: 200, description: '회원 목록 반환', type: [AdminUserDto] })
     getAllUser(
         @User() userReq: USER_REQ,
-    ): Promise<UsersEntity[]>{
+    ): Promise<AdminUserDto[]>{
         return this.usersService.getAllUsers(userReq);
     }
 
@@ -48,7 +49,7 @@ export class UsersController {
     @ApiResponse({ status: 200, description: '검색된 회원 반환', type: UsersEntity })
     findUser(
         @Query() user: Partial<USER_REQ>,
-    ): Promise<UsersEntity | {}>{
+    ): Promise<AdminUserDto | {}>{
         return this.usersService.findUser(user);
     }
 

@@ -2,9 +2,10 @@ import {Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn} from "typ
 import {BaseEntity} from "../../../common/entities/base.entity";
 import {UsersEntity} from "../../users/entities/users.entity";
 import {PostEntity} from "../../post/entities/post.entity";
-import {Exclude, Transform} from "class-transformer";
+import {Exclude, Expose, Transform} from "class-transformer";
 import {join} from "path";
 
+@Exclude()
 @Entity('files')
 export class FilesEntity extends BaseEntity {
     @PrimaryGeneratedColumn('uuid', {
@@ -12,6 +13,7 @@ export class FilesEntity extends BaseEntity {
     })
     uuid: string;
 
+    @Expose()
     @Column({
         comment: '원본 파일 이름',
     })
@@ -28,6 +30,7 @@ export class FilesEntity extends BaseEntity {
     @Exclude()
     path: string;
 
+    @Expose()
     @Column({
         comment: '요청 경로',
     })
@@ -39,6 +42,7 @@ export class FilesEntity extends BaseEntity {
     })
     extension: string;
 
+    @Expose()
     @Column({
         comment: '파일 크기 (바이트 단위)',
     })
@@ -49,16 +53,20 @@ export class FilesEntity extends BaseEntity {
     })
     mimetype: string;
 
+    @Expose()
     @Column({
         comment: '썸네일 파일 위치',
         nullable: true,
     })
+    @Transform(({value}) => value && join(process.env.FILE_DOWNLOAD_URL_PREFIX || 'upload', value))
     thumbnail?: string;
 
+    @Expose()
     @ManyToOne(() => PostEntity, post => post.files)
     @JoinColumn()
     post: PostEntity | number;
 
+    @Expose()
     @ManyToOne(() => UsersEntity, users => users.files, { nullable: false, eager: true })
     @JoinColumn()
     uploadedBy: UsersEntity | number;

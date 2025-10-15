@@ -28,20 +28,26 @@ export class FilesService {
 
     async getFileUrl(fileUuid: string) {
         try{
-            const file = await this.fileRepository.findOne({
+            const files = await this.fileRepository.find({
                 where : {
                     storedName: fileUuid,
                 }
             });
-            if(!file) throw new BadRequestException('해당 파일을 찾을 수 없습니다. 파일명이나 파일 경로가 정확한지 다시 한번 확인하세요.');
+            if(fileUuid && !files.length) throw new BadRequestException('해당 파일을 찾을 수 없습니다. 파일명이나 파일 경로가 정확한지 다시 한번 확인하세요.');
 
-            const transformed = plainToInstance(FilesEntity, file, {
-                excludeExtraneousValues: false,
+            const filesUrl = files?.map(file => {
+                const {url, thumbnail, originalName, size} = plainToInstance(FilesEntity, file, {
+                    excludeExtraneousValues: false,
+                });
+                const sizeMB = (file.size / (1024 * 1024)).toFixed(2) + 'MB';
+
+                return {url, thumbnail, originalName, size, sizeMB};
             });
 
             return {
                 success: true,
-                url : transformed.url,
+                url : filesUrl,
+                count : files.length
             };
         }catch(error){
             throw error;
@@ -183,7 +189,7 @@ export class FilesService {
                         .toFormat('webp', { quality: 60 })
                         .toFile(join(uploadPath, 'thumbnail', `${uuid()}.webp`));
                     savedFiles.push(join(uploadPath, 'thumbnail', `${uuid()}.webp`));
-                    uploadFile.thumbnail = join(uploadPath, 'thumbnail', `${uuid()}.webp`);
+                    uploadFile.thumbnail = join(uploadPath.slice(70), 'thumbnail', `${uuid()}.webp`);
                 }
 
                 if (options && options.entity && options.type === 'PostEntity') {

@@ -4,6 +4,8 @@ import {UsersEntity} from "./entities/users.entity";
 import type {DeleteResult, Repository, UpdateResult} from "typeorm";
 import {CreateUserDto} from "./dto/create-user.dto";
 import {UpdateUserDto} from "./dto/update-user.dto";
+import {plainToInstance} from "class-transformer";
+import {AdminUserDto} from "./dto/admin-user.dto";
 
 @Injectable()
 export class UsersService {
@@ -19,10 +21,10 @@ export class UsersService {
      * @returns UsersEntity 배열
      * @throws DB 조회 오류 시 handleUserDbError 호출
      */
-    async getAllUsers(userReq: Pick<UsersEntity, 'email' | 'id'>): Promise<UsersEntity[]>{
+    async getAllUsers(userReq: Pick<UsersEntity, 'email' | 'id'>): Promise<AdminUserDto[]>{
         try{
             this.logger.log(`회원 조회 요청자 : ${userReq.id}`);
-            return await this.usersRepository.find();
+            return plainToInstance(AdminUserDto, await this.usersRepository.find());
         }catch (error) {
             this.logger.error(error);
             throw error;
@@ -36,7 +38,7 @@ export class UsersService {
      * @returns UsersEntity 존재하면 반환, 없으면 빈 객체 {}
      * @throws DB 조회 오류 시 handleUserDbError 호출
      */
-    async findUser(user: Partial<Pick<UsersEntity, 'uid' | 'email' | 'id'>>): Promise<UsersEntity | {}>{
+    async findUser(user: Partial<Pick<UsersEntity, 'uid' | 'email' | 'id'>>): Promise<AdminUserDto | {}>{
         try{
             const findUser = await this.usersRepository.findOne({
                 where : {
@@ -46,7 +48,7 @@ export class UsersService {
                 }
             });
 
-            return findUser ?? {} ;
+            return plainToInstance(AdminUserDto, findUser) ?? {} ;
         }catch (error) {
             this.logger.error(error);
             throw error;
