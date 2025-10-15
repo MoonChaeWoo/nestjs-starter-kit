@@ -1,6 +1,6 @@
 import {Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException} from '@nestjs/common';
 import {InjectRepository} from "@nestjs/typeorm";
-import {Repository} from "typeorm";
+import {DataSource, Repository} from "typeorm";
 import {PostEntity} from "./entities/post.entity";
 import {UsersEntity} from "../users/entities/users.entity";
 import {PaginatePostDto} from "./dto/paginate-post.dto";
@@ -18,6 +18,7 @@ export class PostService {
         @InjectRepository(UsersEntity)
         private readonly usersRepository: Repository<UsersEntity>,
         private readonly fileService: FilesService,
+        private readonly dataSource: DataSource,
     ) {}
 
     async paginatePost(query: PaginatePostDto) {
@@ -59,50 +60,81 @@ export class PostService {
     }
 
     async uploadBFileDiskPost(post: CreatePostDto, userReq: USER_REQ, files : MulterFile[]) {
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
         try{
             const user = await this.usersRepository.findOne({where: {id : userReq.id}});
             if(!user) throw new UnauthorizedException('유효하지 않은 사용자입니다.');
-            const postCreate = this.postRepository.create(post);
-            const postSave = await this.postRepository.save({...postCreate, author : user});
+
+            const postCreate = queryRunner.manager.create(PostEntity, {...post, author : user});
+            const postSave = await queryRunner.manager.save(postCreate);
 
             const {success, message, count} = await this.fileService.uploadBFileDisk(
-                files, userReq, {entity: postSave, type : 'PostEntity'}
+                files,
+                userReq,
+                {
+                    entity: postSave,
+                    type : 'PostEntity',
+                    queryRunner,
+                }
             );
+
             if(!success){
                 throw new InternalServerErrorException('file upload error => ', message);
             }
 
+            await queryRunner.commitTransaction();
             return {
                 success : true,
                 message : '게시글 등록 완료',
                 files_count: count
             }
         }catch(error){
+            await queryRunner.rollbackTransaction();
             throw error;
+        }finally {
+            await queryRunner.release();
         }
     }
 
-    async uploadFileMemoryPost(post: CreatePostDto, userReq: USER_REQ, file: MulterFile[]) {
+    async uploadFileMemoryPost(post: CreatePostDto, userReq: USER_REQ, files: MulterFile[]) {
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
         try{
             const user = await this.usersRepository.findOne({where: {id : userReq.id}});
             if(!user) throw new UnauthorizedException('유효하지 않은 사용자입니다.');
-            const postCreate = this.postRepository.create(post);
-            const postSave = await this.postRepository.save({...postCreate, author : user});
+
+            const postCreate = queryRunner.manager.create(PostEntity, {...post, author : user});
+            const postSave = await queryRunner.manager.save(postCreate);
 
             const {success, message, count} = await this.fileService.uploadFileMemory(
-                'post', file, userReq, {entity: postSave, type : 'PostEntity'}
+                'post',
+                files,
+                userReq,
+                {
+                    entity: postSave,
+                    type : 'PostEntity',
+                    queryRunner
+                }
             );
+
             if(!success){
                 throw new InternalServerErrorException('file upload error => ', message);
             }
 
+            await queryRunner.commitTransaction();
             return {
                 success : true,
                 message : '게시글 등록 완료',
                 files_count: count
             }
         }catch(error){
+            await queryRunner.rollbackTransaction();
             throw error;
+        }finally {
+            await queryRunner.release();
         }
     }
 

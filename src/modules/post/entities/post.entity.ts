@@ -14,7 +14,7 @@ export class PostEntity extends BaseEntity{
     author: UsersEntity;
 
     @OneToMany(() => FilesEntity, (files) => files.post, { eager: true })
-    files: FilesEntity[];
+    files: FilesEntity[] | string[];
 
     @Column({
         comment: '게시글 제목',

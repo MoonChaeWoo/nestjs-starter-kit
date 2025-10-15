@@ -1,6 +1,6 @@
 import {BadRequestException, Injectable, UnauthorizedException} from '@nestjs/common';
 import {InjectRepository} from "@nestjs/typeorm";
-import {Repository} from "typeorm";
+import {QueryRunner, Repository} from "typeorm";
 import {FilesEntity} from "./entities/files.entity";
 import type {MulterFile} from "../../common/type/common.type";
 import {dirname, extname, join} from 'path';
@@ -48,7 +48,14 @@ export class FilesService {
         }
     }
 
-    async uploadBFileDisk<T extends BaseEntity>(files: MulterFile[], user: USER_REQ, options?: { entity?: T; type: string }) {
+    async uploadBFileDisk<T extends BaseEntity>(
+        files: MulterFile[],
+        user: USER_REQ,
+        options?: {
+            entity?: T,
+            type: string,
+            queryRunner ?: QueryRunner
+        }) {
         if(files.length < 1) return {
             success : true,
             message : '파일할 파일 없음',
@@ -81,8 +88,13 @@ export class FilesService {
 
                 savedFiles.push(file.path);
 
-                const createFile = this.fileRepository.create(uploadFile);
-                return await this.fileRepository.save(createFile);
+                if(options?.queryRunner){
+                    const createFile = options.queryRunner.manager.create(FilesEntity, uploadFile);
+                    return await options.queryRunner.manager.save(createFile);
+                }else{
+                    const createFile = this.fileRepository.create(uploadFile);
+                    return await this.fileRepository.save(createFile);
+                }
             }));
             return {
                 success : results.every(value => value.status === 'fulfilled'),
@@ -96,12 +108,21 @@ export class FilesService {
             return {
                 success : false,
                 message : error.message,
+                uuids : [],
                 count : files.length,
             };
         }
     }
 
-    async uploadFileMemory<T extends BaseEntity>(saveLocation: string, files: MulterFile[], user: USER_REQ, options?: { entity?: T; type: string }){
+    async uploadFileMemory<T extends BaseEntity>(
+        saveLocation: string,
+        files: MulterFile[],
+        user: USER_REQ,
+        options?: {
+            entity?: T,
+            type: string,
+            queryRunner ?: QueryRunner}
+    ){
         if(files.length < 1) return {
             success : true,
             message : '파일할 파일 없음',
@@ -167,8 +188,13 @@ export class FilesService {
                     uploadFile.post = options.entity as unknown as PostEntity;
                 }
 
-                const createFile = this.fileRepository.create(uploadFile);
-                return await this.fileRepository.save(createFile);
+                if(options?.queryRunner){
+                    const createFile = options.queryRunner.manager.create(FilesEntity, uploadFile);
+                    return options.queryRunner.manager.save(createFile);
+                }else{
+                    const createFile = this.fileRepository.create(uploadFile);
+                    return await this.fileRepository.save(createFile);
+                }
             }));
 
             return {
@@ -182,7 +208,8 @@ export class FilesService {
             await Promise.allSettled(savedFiles.map(path => unlink(path)));
             return {
                 success : false,
-                message : error.message,
+                message : '파일 업로드 실패 : ' + error.message,
+                uuids : [],
                 count : files.length,
             };
         }
