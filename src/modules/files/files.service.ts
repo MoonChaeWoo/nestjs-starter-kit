@@ -58,7 +58,8 @@ export class FilesService {
         }) {
         if(files.length < 1) return {
             success : true,
-            message : '파일할 파일 없음',
+            message : '업로드할 파일 없음',
+            uuids : [],
             count : 0,
         };
 
@@ -125,7 +126,8 @@ export class FilesService {
     ){
         if(files.length < 1) return {
             success : true,
-            message : '파일할 파일 없음',
+            message : '업로드할 파일 없음',
+            uuids : [],
             count : 0,
         };
 
