@@ -1,0 +1,47 @@
+# Git
+.git
+.gitignore
+
+# IDE
+.idea
+.vscode
+
+node_modules
+
+# Build output
+dist
+build
+out
+coverage
+
+# Environment variables
+.env
+.env.*
+!/.env.example
+
+# Logs
+npm-debug.log
+yarn-error.log
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+.DS_Store
+Thumbs.db
+
+# Tests
+*.spec.ts
+*.test.ts
+
+# CI/CD and documentation
+.github
+.gitlab-ci.yml
+README.md
+LICENSE
+docs
+
+# Nginx
+nginx/logs
+nginx/cache
