@@ -1,15 +1,8 @@
-import {
-    BadRequestException,
-    Injectable,
-    InternalServerErrorException,
-    Logger,
-    OnModuleInit,
-    UnauthorizedException
-} from '@nestjs/common';
+import {BadRequestException, Injectable, InternalServerErrorException, Logger, OnModuleInit, UnauthorizedException} from '@nestjs/common';
 import {MailerService} from "@nestjs-modules/mailer";
 import {MailResponseType, SendMailType} from "../mail/types/mail-types.type";
 import {AuthEmailContext, TokenType, VerificationData} from "./interface/auth.interface";
-import {checkExpiredToken, checkExpiresAt, checkUserEntity, createContext} from "./utils/auth.utils";
+import {checkExpiredToken, checkExpiresAt, createContext} from "./utils/auth.utils";
 import {CronExpression, SchedulerRegistry} from "@nestjs/schedule";
 import {ConfigService} from "@nestjs/config";
 import {CronJob} from "cron";
@@ -24,6 +17,8 @@ import {Response} from "express";
 import {RoleService} from "../role/role.service";
 import {AuthenticateDto} from "./dto/authenticate-auth.dto";
 import {LoginAuthDto} from "./dto/login-auth.dto";
+import {checkUserEntity} from "../users/utils/user.utils";
+import {USER_REQ} from "./type/auth.type";
 
 @Injectable()
 export class AuthService implements OnModuleInit{
@@ -101,7 +96,7 @@ export class AuthService implements OnModuleInit{
      * @param isRefreshToken true면 리프레시 토큰, false면 액세스 토큰
      * @returns 생성된 JWT 문자열
      */
-    generateToken(user: Pick<UsersEntity, 'email' | 'id' | 'uid'>, isRefreshToken : boolean): string {
+    generateToken(user: USER_REQ, isRefreshToken : boolean): string {
         const payload = {
             email: user.email,
             id: user.id,

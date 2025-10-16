@@ -1,4 +1,16 @@
-import {Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards} from '@nestjs/common';
+import {
+    Body,
+    Controller,
+    Delete,
+    Get,
+    Param,
+    ParseIntPipe,
+    Patch,
+    Post,
+    Query,
+    UseGuards,
+    UseInterceptors
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import {UpdateUserDto} from "./dto/update-user.dto";
 import {CreateUserDto} from "./dto/create-user.dto";
@@ -9,8 +21,10 @@ import {BearerTokenGuard} from "../auth/guard/bearer-token.guard";
 import {User} from "./decorator/user.decorator";
 import type {USER_REQ} from "../auth/type/auth.type";
 import {AdminUserDto} from "./dto/admin-user.dto";
+import {LogInterceptor} from "../../common/interceptors/log.interceptor";
 
 @ApiTags('Users - 사용자 관리')
+@UseInterceptors(LogInterceptor)
 @Controller('users')
 export class UsersController {
     constructor(private readonly usersService: UsersService) {}

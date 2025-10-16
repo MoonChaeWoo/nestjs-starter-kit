@@ -1,4 +1,4 @@
-import {CanActivate, ExecutionContext, Injectable, Logger, LoggerService, UnauthorizedException} from "@nestjs/common";
+import {CanActivate, ExecutionContext, Injectable, Logger, UnauthorizedException} from "@nestjs/common";
 import {checkExpiredToken} from "../utils/auth.utils";
 import {AuthService} from "../auth.service";
 

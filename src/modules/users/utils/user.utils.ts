@@ -4,6 +4,7 @@ import {
     InternalServerErrorException,
     NotFoundException,
 } from '@nestjs/common';
+import {UsersEntity} from "../entities/users.entity";
 
 /**
  * DB 작업 중 발생하는 에러 코드에 따라 적절한 NestJS 예외 던짐
@@ -33,3 +34,7 @@ export const handleUserDbError = (error: any): never => {
             throw new InternalServerErrorException('서버 내부 오류');
     }
 };
+
+export const checkUserEntity = (entity : any): entity is UsersEntity  => {
+    return ('id' in entity && 'email' in entity) && 'nickname' in entity;
+}

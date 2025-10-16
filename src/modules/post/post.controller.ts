@@ -10,6 +10,9 @@ import {MemoryFileUploadConfig} from "../../config/file/memory-file-upload.confi
 import {CreatePostDto} from "./dto/create-post.dto";
 import type {USER_REQ} from "../auth/type/auth.type";
 import {ApiOperation, ApiParam, ApiQuery, ApiResponse, ApiTags} from "@nestjs/swagger";
+import {TransactionInterceptor} from "../../common/interceptors/transaction.interceptor";
+import {Transaction} from "../../common/decorators/transaction.decorator";
+import type {QueryRunner} from "typeorm";
 
 @UseGuards(BearerTokenGuard)
 @ApiTags('Post - 게시글 관리 & 등록')
@@ -97,6 +100,7 @@ export class PostController {
      *
      * @param post 게시글 생성 DTO
      * @param userReq 현재 로그인한 사용자
+     * @param queryRunner TransactionInterceptor로부터 자동 생성
      * @param files 업로드할 파일 목록
      * @returns 업로드된 게시글 및 파일 정보
      */
@@ -104,12 +108,14 @@ export class PostController {
     @ApiOperation({ summary: '게시글 + 파일 업로드 (디스크)', description: '게시글 정보와 파일을 디스크에 업로드합니다.' })
     @ApiResponse({ status: 201, description: '게시글 및 파일 업로드 성공' })
     @UseInterceptors(FilesInterceptor('files')) // HTML form의 <input type="file" name="file" /> 에서 name 속성과 일치해야 함
+    @UseInterceptors(TransactionInterceptor)
     uploadBFileDiskPost(
         @Body() post: CreatePostDto,
         @User() userReq: USER_REQ,
+        @Transaction() queryRunner: QueryRunner,
         @UploadedFiles() files: MulterFile[]
     ){
-        return this.postService.uploadBFileDiskPost(post, userReq, files);
+        return this.postService.uploadBFileDiskPost(post, userReq, queryRunner, files);
     }
 
     /**
@@ -120,6 +126,7 @@ export class PostController {
      *
      * @param post 게시글 생성 DTO
      * @param userReq 현재 로그인한 사용자
+     * @param queryRunner TransactionInterceptor로부터 자동 생성
      * @param files 업로드할 파일 목록
      * @returns 업로드된 게시글 및 파일 정보
      */
@@ -127,12 +134,14 @@ export class PostController {
     @ApiOperation({ summary: '게시글 + 파일 업로드 (메모리)', description: '게시글 정보와 파일을 메모리에 업로드합니다.' })
     @ApiResponse({ status: 201, description: '게시글 및 파일 업로드 성공' })
     @UseInterceptors(FilesInterceptor('files', Infinity, MemoryFileUploadConfig())) // HTML form의 <input type="file" name="file" /> 에서 name 속성과 일치해야 함
+    @UseInterceptors(TransactionInterceptor)
     uploadFileMemoryPost(
         @Body() post: CreatePostDto,
         @User() userReq: USER_REQ,
+        @Transaction() queryRunner: QueryRunner,
         @UploadedFiles() files: MulterFile[]
     ){
-        return this.postService.uploadFileMemoryPost(post, userReq, files);
+        return this.postService.uploadFileMemoryPost(post, userReq, queryRunner, files);
     }
 
     @Patch('update/:uid')

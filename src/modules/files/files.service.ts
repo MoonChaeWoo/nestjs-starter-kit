@@ -176,7 +176,7 @@ export class FilesService {
                     uploadPath.slice(uploadPath.indexOf('/upload') + 7),
                     fileName
                 );
-                savedFiles.push(`${uuid()}${extname(file.originalname)}`);
+                savedFiles.push(join(uploadFile.path, uploadFile.storedName));
 
                 // 썸네일 저장 (썸네일 생성 가능한 파일만)
                 const allowedExtensions = [
@@ -184,12 +184,18 @@ export class FilesService {
                     '.tiff', '.avif', '.heif', '.heic'];
                 const fileExt = extname(file.originalname).toLowerCase();
                 if (allowedExtensions.includes(fileExt)) {
+
+                    const thumbnail = {
+                        storedName: `${uuid()}.webp`,
+                        storedPath: join(uploadPath, 'thumbnail')
+                    }
+
                     await sharp(file.buffer)
                         .resize({ width: 200, height: 200, fit: 'inside', withoutEnlargement: true })
                         .toFormat('webp', { quality: 60 })
-                        .toFile(join(uploadPath, 'thumbnail', `${uuid()}.webp`));
-                    savedFiles.push(join(uploadPath, 'thumbnail', `${uuid()}.webp`));
-                    uploadFile.thumbnail = join(uploadPath.slice(70), 'thumbnail', `${uuid()}.webp`);
+                        .toFile(join(thumbnail.storedPath, thumbnail.storedName));
+                    savedFiles.push(join(thumbnail.storedPath, thumbnail.storedName));
+                    uploadFile.thumbnail = join(uploadPath.slice(70), 'thumbnail', thumbnail.storedName);
                 }
 
                 if (options && options.entity && options.type === 'PostEntity') {

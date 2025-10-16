@@ -1,6 +1,6 @@
 import {Injectable, InternalServerErrorException, NotFoundException, UnauthorizedException} from '@nestjs/common';
 import {InjectRepository} from "@nestjs/typeorm";
-import {DataSource, Repository} from "typeorm";
+import {DataSource, type QueryRunner, Repository} from "typeorm";
 import {PostEntity} from "./entities/post.entity";
 import {UsersEntity} from "../users/entities/users.entity";
 import {PaginatePostDto} from "./dto/paginate-post.dto";
@@ -59,10 +59,7 @@ export class PostService {
         });
     }
 
-    async uploadBFileDiskPost(post: CreatePostDto, userReq: USER_REQ, files : MulterFile[]) {
-        const queryRunner = this.dataSource.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
+    async uploadBFileDiskPost(post: CreatePostDto, userReq: USER_REQ, queryRunner: QueryRunner, files : MulterFile[]) {
         try{
             const user = await this.usersRepository.findOne({where: {id : userReq.id}});
             if(!user) throw new UnauthorizedException('유효하지 않은 사용자입니다.');
@@ -84,24 +81,17 @@ export class PostService {
                 throw new InternalServerErrorException('file upload error => ', message);
             }
 
-            await queryRunner.commitTransaction();
             return {
                 success : true,
                 message : '게시글 등록 완료',
                 files_count: count
             }
         }catch(error){
-            await queryRunner.rollbackTransaction();
-            throw error;
-        }finally {
-            await queryRunner.release();
+            throw new InternalServerErrorException(error.message);
         }
     }
 
-    async uploadFileMemoryPost(post: CreatePostDto, userReq: USER_REQ, files: MulterFile[]) {
-        const queryRunner = this.dataSource.createQueryRunner();
-        await queryRunner.connect();
-        await queryRunner.startTransaction();
+    async uploadFileMemoryPost(post: CreatePostDto, userReq: USER_REQ, queryRunner: QueryRunner, files: MulterFile[]) {
         try{
             const user = await this.usersRepository.findOne({where: {id : userReq.id}});
             if(!user) throw new UnauthorizedException('유효하지 않은 사용자입니다.');
@@ -124,17 +114,13 @@ export class PostService {
                 throw new InternalServerErrorException('file upload error => ', message);
             }
 
-            await queryRunner.commitTransaction();
             return {
                 success : true,
                 message : '게시글 등록 완료',
                 files_count: count
             }
         }catch(error){
-            await queryRunner.rollbackTransaction();
-            throw error;
-        }finally {
-            await queryRunner.release();
+            throw new InternalServerErrorException(error.message);
         }
     }
 

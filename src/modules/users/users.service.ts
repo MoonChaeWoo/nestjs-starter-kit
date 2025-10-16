@@ -6,6 +6,7 @@ import {CreateUserDto} from "./dto/create-user.dto";
 import {UpdateUserDto} from "./dto/update-user.dto";
 import {plainToInstance} from "class-transformer";
 import {AdminUserDto} from "./dto/admin-user.dto";
+import {USER_REQ} from "../auth/type/auth.type";
 
 @Injectable()
 export class UsersService {
@@ -21,7 +22,7 @@ export class UsersService {
      * @returns UsersEntity 배열
      * @throws DB 조회 오류 시 handleUserDbError 호출
      */
-    async getAllUsers(userReq: Pick<UsersEntity, 'email' | 'id'>): Promise<AdminUserDto[]>{
+    async getAllUsers(userReq: USER_REQ): Promise<AdminUserDto[]>{
         try{
             this.logger.log(`회원 조회 요청자 : ${userReq.id}`);
             return plainToInstance(AdminUserDto, await this.usersRepository.find());
@@ -38,7 +39,7 @@ export class UsersService {
      * @returns UsersEntity 존재하면 반환, 없으면 빈 객체 {}
      * @throws DB 조회 오류 시 handleUserDbError 호출
      */
-    async findUser(user: Partial<Pick<UsersEntity, 'uid' | 'email' | 'id'>>): Promise<AdminUserDto | {}>{
+    async findUser(user: Partial<USER_REQ>): Promise<AdminUserDto | {}>{
         try{
             const findUser = await this.usersRepository.findOne({
                 where : {

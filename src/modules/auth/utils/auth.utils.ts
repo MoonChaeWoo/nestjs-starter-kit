@@ -1,7 +1,6 @@
 import {AuthEmailContext, VerificationData} from "../interface/auth.interface";
 import {randomInt} from "crypto";
 import {JwtService} from "@nestjs/jwt";
-import {UsersEntity} from "../../users/entities/users.entity";
 
 /**
  * 인증 코드 context 생성함
@@ -71,8 +70,4 @@ export const checkExpiredToken = async(token: string): Promise<{payload, pass : 
             pass : false
         };
     }
-}
-
-export const checkUserEntity = (entity : any): entity is UsersEntity  => {
-    return ('id' in entity && 'email' in entity) && 'nickname' in entity;
 }
