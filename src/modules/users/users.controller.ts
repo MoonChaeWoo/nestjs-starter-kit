@@ -1,16 +1,4 @@
-import {
-    Body,
-    Controller,
-    Delete,
-    Get,
-    Param,
-    ParseIntPipe,
-    Patch,
-    Post,
-    Query,
-    UseGuards,
-    UseInterceptors
-} from '@nestjs/common';
+import {Body, Controller, Delete, Get, Param, ParseIntPipe, Patch, Post, Query, UseGuards, UseInterceptors} from '@nestjs/common';
 import { UsersService } from './users.service';
 import {UpdateUserDto} from "./dto/update-user.dto";
 import {CreateUserDto} from "./dto/create-user.dto";
