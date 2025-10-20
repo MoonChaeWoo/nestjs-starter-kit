@@ -13,6 +13,8 @@ import {GroupEntity} from "../../group/entities/group.entity";
 import {RoleEntity} from "../../role/entities/role.entity";
 import {Exclude, Expose} from "class-transformer";
 import {ApiProperty} from "@nestjs/swagger";
+import {ChatRoomsEntity} from "../../socket-io/entities/chat-rooms.entity";
+
 
 
 @Entity('users')
@@ -94,4 +96,8 @@ export class UsersEntity extends BaseEntity {
     @Expose()
     @ApiProperty({ type: () => [RoleEntity], description: '사용자 역할 목록' })
     roles: RoleEntity[];
+
+    @ManyToMany(() => ChatRoomsEntity, (chat) => chat.users)
+    @JoinTable()
+    chats: ChatRoomsEntity[];
 }
