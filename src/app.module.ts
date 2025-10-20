@@ -21,6 +21,8 @@ import {APP_INTERCEPTOR} from "@nestjs/core";
 import { SchedulerModule } from './modules/scheduler/scheduler.module';
 import {ServeStaticModule} from "@nestjs/serve-static";
 import {DownloadFileMainConfigAsync} from "./config/file/download-file.config";
+import { NoticeModule } from './modules/socket-io/notice/notice.module';
+import { SocketIoModule } from './modules/socket-io/socket-io.module';
 
 @Module({
     imports: [
@@ -42,6 +44,7 @@ import {DownloadFileMainConfigAsync} from "./config/file/download-file.config";
         PermissionModule,
         MailModule,
         SchedulerModule,
+        SocketIoModule,
     ],
     controllers: [AppController],
     providers: [AppService, InitialDataDatabaseService, {

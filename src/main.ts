@@ -1,12 +1,13 @@
-import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
+import {NestFactory} from '@nestjs/core';
+import {AppModule} from './app.module';
 import cookieParser from 'cookie-parser';
 import {CreateDatabaseService} from "./config/database/main/create-database.service";
 import {DocumentBuilder, SwaggerModule} from "@nestjs/swagger";
 import {ValidationPipe} from "@nestjs/common";
 import expressLayouts from 'express-ejs-layouts';
-import type{ NestExpressApplication } from '@nestjs/platform-express';
+import type {NestExpressApplication} from '@nestjs/platform-express';
 import * as path from 'path';
+import {CorsConfig} from "./config/cors/cors.config";
 
 async function bootstrap() {
     // 초기 데이터 베이스 생성 -> 생성 이후 InitialDataDatabaseService에서 데이터 베이스 권한과 역할 기본 데이터 생성
@@ -14,8 +15,8 @@ async function bootstrap() {
 
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-    // TODO 전역 로그 설정
-    // app.useLogger(Logger);
+    // cors 설정
+    app.enableCors(CorsConfig());
 
     // public 폴더를 정적 경로로 노출
     app.useStaticAssets(path.join(__dirname, '..', 'server-side-render/public'));

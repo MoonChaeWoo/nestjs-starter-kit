@@ -10,4 +10,10 @@ export class AppController {
   getIndex() {
     return this.appService.getIndex();
   }
+
+    @Get('socket-test')
+    @Render('socket/index')
+    getSocket() {
+        return this.appService.getSocket();
+    }
 }
