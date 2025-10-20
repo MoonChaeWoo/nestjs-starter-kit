@@ -24,9 +24,59 @@ export class SseController {
      * Response: { "success": true }
      */
     @Post('broadcast')
-    @ApiOperation({ summary: 'SSE 브로드캐스트 메시지 전송', description: '서버에서 모든 구독 클라이언트에게 메시지를 전송합니다.' })
-    @ApiBody({ type: MessageEvent })
-    @ApiResponse({ status: 201, description: '메시지 전송 성공', schema: { example: { success: true } } })
+    @ApiOperation({
+        summary: 'SSE 브로드캐스트 메시지 전송',
+        description: `
+서버에서 **현재 SSE를 구독 중인 모든 클라이언트**에게 메시지를 전송합니다.
+
+### 💡 사용 예시 (클라이언트)
+\`\`\`js
+fetch('http://localhost:3000/sse/broadcast', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    data: { message: '서버에서 보낸 테스트 메시지' },
+    type: 'alarm',
+  }),
+})
+  .then(res => res.json())
+  .then(console.log);
+\`\`\`
+    `,
+    })
+    @ApiBody({
+        type: MessageEventDto,
+        required: true,
+        examples: {
+            simple: {
+                summary: '기본 알림 메시지',
+                description: '단순한 문자열 메시지 형태의 예시',
+                value: {
+                    data: '서버에서 보낸 공지사항입니다.',
+                    type: 'notice',
+                },
+            },
+            object: {
+                summary: '객체 형태의 메시지',
+                description: 'data가 객체일 경우의 예시',
+                value: {
+                    data: {
+                        title: '새로운 채팅 메시지',
+                        content: '안녕하세요! SSE 테스트 중입니다.',
+                    },
+                    type: 'chat',
+                    timestamp: 1730000000000,
+                },
+            },
+        },
+    })
+    @ApiResponse({
+        status: 201,
+        description: '메시지 전송 성공',
+        schema: {
+            example: { success: true },
+        },
+    })
     broadcast(
         @Body()body: MessageEventDto
     ){
@@ -62,9 +112,34 @@ export class SseController {
      * evtSource.onmessage = (event) => console.log(JSON.parse(event.data));
      */
     @Sse('alarm')
-    @ApiOperation({ summary: 'SSE 알람 스트림', description: '클라이언트가 EventSource로 구독할 수 있는 SSE 스트림을 제공합니다.' })
-    @ApiResponse({ status: 200, description: 'SSE 이벤트 스트림' })
-    sse(): Observable<MessageEvent> {
+    @ApiOperation({
+        summary: 'SSE 알람 스트림',
+        description: `
+이 API는 클라이언트가 **Server-Sent Events(SSE)** 형식으로 알람을 수신할 수 있게 합니다.
+
+**클라이언트 사용 예시:**
+\`\`\`js
+const eventSource = new EventSource('http://localhost:3000/sse/alarm');
+
+eventSource.onmessage = ({ data }) => {
+  console.log('New message:', JSON.parse(data));
+};
+
+eventSource.onopen = () => console.log('SSE connected');
+eventSource.onerror = (err) => console.error('SSE error:', err);
+\`\`\`
+    `,
+    })
+    @ApiResponse({
+        status: 200,
+        description: 'SSE 이벤트 스트림 (Content-Type: text/event-stream)',
+        schema: {
+            example: {
+                data: '{"message":"테스트 알람","timestamp":"2025-10-20T15:00:00Z"}',
+            },
+        },
+    })
+    subscribe(): Observable<MessageEvent> {
         return this.sseService.stream$.pipe(
             map(payload => ({
                 data: JSON.stringify(payload)
