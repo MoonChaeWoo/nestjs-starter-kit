@@ -8,6 +8,7 @@ import expressLayouts from 'express-ejs-layouts';
 import type {NestExpressApplication} from '@nestjs/platform-express';
 import * as path from 'path';
 import {CorsConfig} from "./config/cors/cors.config";
+import compression from 'compression';
 
 async function bootstrap() {
     // 초기 데이터 베이스 생성 -> 생성 이후 InitialDataDatabaseService에서 데이터 베이스 권한과 역할 기본 데이터 생성
@@ -17,6 +18,17 @@ async function bootstrap() {
 
     // cors 설정
     app.enableCors(CorsConfig());
+
+    // compress 설정 (응답속도를 높이기 위해 적용)
+    const filePrefix = process.env.FILE_DOWNLOAD_URL_PREFIX || '/upload';
+    const regex = new RegExp(`(upload|${filePrefix})`);
+    app.use(compression({
+        filter: (req, res) => {
+            if (regex.test(req.originalUrl)) return false;
+            return compression.filter(req, res);
+        },
+        threshold: 1024
+    }));
 
     // public 폴더를 정적 경로로 노출
     app.useStaticAssets(path.join(__dirname, '..', 'server-side-render/public'));
